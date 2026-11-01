@@ -284,17 +284,22 @@ function gambarSisi() {
   side.innerHTML =
     '<div class="card"><div class="card-h"><h3>' + ic('activity') + 'Ringkasan alat ini</h3></div><div class="card-b" id="ringkas-sisi"></div></div>' +
     '<div class="card"><div class="card-h"><h3>' + ic('paperclip') + 'Lampiran & bukti foto</h3><span class="small muted">' + lamp.length + ' berkas</span></div><div class="card-b stack" style="gap:8px">' +
+    '<label class="btn btn-primary btn-block lamp-kamera">' + ic('camera') + 'Ambil foto<input type="file" id="f-kamera" accept="image/*" capture="environment" class="sr-only"></label>' +
     '<label class="dropzone" id="dz">' + ic('cloud-upload') + '<div><b>Unggah foto / PDF</b></div><div class="hint">JPG, PNG, PDF · maks 8 MB</div><input type="file" id="f-lamp" accept="image/*,application/pdf" class="sr-only" multiple></label>' +
+    '<p class="hint" style="margin:0">Foto bisa diputar, dipotong, dan diberi tanda sebelum diunggah.</p>' +
     '<div id="lamp-list" class="stack" style="gap:6px">' + lamp.map(l => '<div class="file-row">' + ic(/pdf/.test(l.mime) ? 'file-text' : 'image') + '<span class="grow" title="' + esc(l.nama) + '">' + esc(l.nama) + '</span>' +
-      '<button class="btn btn-ghost btn-sm btn-icon" data-lihat="' + l.drive_file_id + '" data-nama="' + esc(l.nama) + '" aria-label="Lihat">' + ic('eye') + '</button><button class="btn btn-ghost btn-sm btn-icon" data-hapus-lamp="' + l.lampiran_id + '" aria-label="Hapus">' + ic('trash-2') + '</button></div>').join('') + '</div></div></div>' +
+      '<button class="btn btn-ghost btn-sm btn-icon" data-lihat="' + l.drive_file_id + '" data-nama="' + esc(l.nama) + '" aria-label="Lihat">' + ic('eye') + '</button>' +
+      (/^image\//.test(l.mime) ? '<button class="btn btn-ghost btn-sm btn-icon" data-edit-lamp="' + l.lampiran_id + '" title="Edit foto" aria-label="Edit foto">' + ic('pencil-line') + '</button>' : '') + '<button class="btn btn-ghost btn-sm btn-icon" data-hapus-lamp="' + l.lampiran_id + '" aria-label="Hapus">' + ic('trash-2') + '</button></div>').join('') + '</div></div></div>' +
     '<div class="card"><div class="card-h"><h3>' + ic('notebook-pen') + 'Catatan fisikawan medis</h3></div><div class="card-b"><textarea class="input" id="catatan" maxlength="2000" placeholder="Temuan, kondisi alat, rekomendasi tindak lanjut…">' + esc(F.catatan) + '</textarea>' +
     '<div class="hint" style="margin-top:4px">Muncul di laporan PDF.</div></div></div>';
   $('#catatan', side).addEventListener('input', e => { F.catatan = e.target.value; F.kotor = true; simpanLokal(); const t = $('#catatan-t'); if (t) t.value = F.catatan; });
-  $('#f-lamp', side).addEventListener('change', e => unggahLampiran(Array.from(e.target.files)));
+  $('#f-lamp', side).addEventListener('change', e => { const f = Array.from(e.target.files); e.target.value = ''; unggahLampiran(f, { edit: f.length === 1 }); });
+  $('#f-kamera', side).addEventListener('change', e => { const f = Array.from(e.target.files); e.target.value = ''; unggahLampiran(f, { edit: true, kamera: true }); });
+  $$('[data-edit-lamp]', side).forEach(b => b.addEventListener('click', () => editLampiran(b.dataset.editLamp, b)));
   const dz = $('#dz', side);
   dz.addEventListener('dragover', e => { e.preventDefault(); dz.classList.add('over'); });
   dz.addEventListener('dragleave', () => dz.classList.remove('over'));
-  dz.addEventListener('drop', e => { e.preventDefault(); dz.classList.remove('over'); unggahLampiran(Array.from(e.dataTransfer.files)); });
+  dz.addEventListener('drop', e => { e.preventDefault(); dz.classList.remove('over'); const f = Array.from(e.dataTransfer.files); unggahLampiran(f, { edit: f.length === 1 }); });
   $$('[data-lihat]', side).forEach(b => b.addEventListener('click', async () => {
     setBusy(b, true, '');
     const uri = await dataUriBerkas(b.dataset.lihat);
@@ -322,7 +327,28 @@ function gambarRingkasSisi(ev) {
     '<div style="margin-top:12px" class="hstack between"><span class="small muted">Status sementara</span>' + badge(rk.status) + '</div>';
 }
 
-async function unggahLampiran(files) {
+/** Edit foto lampiran yang sudah terunggah: unggah versi baru, lalu hapus yang lama. */
+async function editLampiran(lampId, btn) {
+  const l = (AppState.lampiran[F.sesi.sesi_id] || []).find(x => x.lampiran_id === lampId); if (!l) return;
+  setBusy(btn, true, '');
+  const uri = await dataUriBerkas(l.drive_file_id);
+  setBusy(btn, false);
+  if (!uri) return toast('Lampiran tidak bisa dibuka.', 'error');
+  const h = await editFoto(uri, { judul: 'Edit foto · ' + l.nama, nama: l.nama, labelSimpan: 'Simpan perubahan' });
+  if (!h || h.asli) return;
+  const r = await api('file.unggah', { jenis: 'lampiran', sesi_id: F.sesi.sesi_id, nama: h.nama, mime: h.mime, base64: h.base64 });
+  if (!r.success) return toast(r.message, 'error');
+  const daftar = AppState.lampiran[F.sesi.sesi_id] = AppState.lampiran[F.sesi.sesi_id] || [];
+  daftar.splice(daftar.indexOf(l) + 1, 0, r.data.lampiran);
+  AppState.berkas[r.data.file_id] = h.dataUri;
+  const hp = await api('lampiran.hapus', { lampiran_id: l.lampiran_id });
+  if (hp.success) AppState.lampiran[F.sesi.sesi_id] = daftar.filter(x => x.lampiran_id !== l.lampiran_id);
+  toast('Foto diperbarui.', 'success');
+  gambarSisi(); perbaruiNilai();
+}
+
+async function unggahLampiran(files, opsi) {
+  opsi = opsi || {};
   if (!files.length) return;
   if (AppState.demo === false && navigator.onLine === false) return toast('Unggah lampiran butuh koneksi internet. Isian form tetap tersimpan di perangkat.', 'warning');
   if (!F.sesi) {
@@ -332,7 +358,14 @@ async function unggahLampiran(files) {
   }
   for (const f of files) {
     try {
-      const b = await bacaBerkas(f);
+      let b = null;
+      if (opsi.edit && /^image\/(png|jpe?g|webp|gif|bmp|heic|heif)$/i.test(f.type || '')) {
+        const nama = opsi.kamera && /^(image|img|photo|foto)?[_-]?\d*\.(jpe?g|png|heic)$/i.test(f.name) ? 'foto-' + (d => d.getFullYear() + String(d.getMonth() + 1).padStart(2, '0') + String(d.getDate()).padStart(2, '0') + '-' + String(d.getHours()).padStart(2, '0') + String(d.getMinutes()).padStart(2, '0'))(new Date()) + '.jpg' : f.name;
+        const h = await editFoto(f, { judul: opsi.kamera ? 'Edit foto dari kamera' : 'Edit foto', nama, bolehAsli: true });
+        if (h === null) continue;                     // dibatalkan
+        if (!h.asli) b = h;
+      }
+      if (!b) b = await bacaBerkas(f);
       const r = await api('file.unggah', { jenis: 'lampiran', sesi_id: F.sesi.sesi_id, nama: b.nama, mime: b.mime, base64: b.base64 });
       if (!r.success) { toast(f.name + ': ' + r.message, 'error'); continue; }
       (AppState.lampiran[F.sesi.sesi_id] = AppState.lampiran[F.sesi.sesi_id] || []).push(r.data.lampiran);

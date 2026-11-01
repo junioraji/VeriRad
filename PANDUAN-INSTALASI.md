@@ -115,6 +115,7 @@ Client ID bukan rahasia. Fungsinya hanya memberi tahu Google bahwa tombol "Masuk
 | Kode backend (`.gs`) | Tempel kode baru, lalu **Terapkan → Kelola penerapan → ✏️ Edit → Versi: Versi baru → Terapkan**. URL `/exec` tetap sama. **Jangan** membuat "Penerapan baru", karena URL akan berubah dan frontend berhenti bekerja. |
 | Frontend | Di folder frontend: `git add .` → `git commit -m "update"` → `git push`. Tunggu 1–2 menit, lalu tekan Ctrl+Shift+R. |
 | `Bersama.gs` / `js/bersama.js` | Kedua berkas **harus identik**. Bila mengubah satu, salin ke yang lain. |
+| Aplikasi terpasang (PWA) | Setelah `git push`, aplikasi di HP otomatis memakai versi baru saat dibuka dengan internet. Bila menambah/mengganti nama berkas JS/CSS, naikkan `VERSI` di `sw.js`. |
 | Toleransi & parameter | Tidak perlu ubah kode. Cukup lewat menu **Template Toleransi** (tersimpan sebagai versi baru). |
 
 ---

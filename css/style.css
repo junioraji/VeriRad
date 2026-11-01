@@ -166,12 +166,13 @@ table.tbl { width: 100%; border-collapse: collapse; }
 /* ---------- Layout aplikasi ---------- */
 #app { min-height: 100%; }
 .shell { display: grid; grid-template-columns: var(--sidebar) 1fr; min-height: 100vh; }
-.sidebar { background: var(--navy-900); color: #fff; display: flex; flex-direction: column; position: sticky; top: 0; height: 100vh; overflow-y: auto; z-index: 40; }
+.sidebar { background: var(--navy-900); color: #fff; display: flex; flex-direction: column; position: sticky; top: 0; height: 100vh; height: 100dvh; overflow: hidden; z-index: 40; }
 .brand { display: flex; align-items: center; gap: 10px; padding: 18px 20px; border-bottom: 1px solid rgba(255, 255, 255, .08); }
 .brand .logo { width: 36px; height: 36px; border-radius: var(--r-md); background: var(--orange); display: grid; place-items: center; color: #fff; }
 .brand b { font-size: 18px; letter-spacing: -.01em; display: block; line-height: 20px; }
 .brand span { font-size: 10px; color: #94A3B8; letter-spacing: .08em; text-transform: uppercase; font-family: var(--mono); }
-.nav { padding: 12px 10px; display: flex; flex-direction: column; gap: 2px; flex: 1; }
+.nav { padding: 12px 10px; display: flex; flex-direction: column; gap: 2px; flex: 1 1 auto; min-height: 0; overflow-y: auto; overscroll-behavior: contain; scrollbar-width: thin; scrollbar-color: rgba(255,255,255,.15) transparent; }
+.brand, .side-foot { flex: none; }
 .nav .grp { font-family: var(--mono); font-size: 10px; letter-spacing: .1em; color: #64748B; padding: 12px 14px 6px; text-transform: uppercase; }
 .nav a { display: flex; align-items: center; gap: 12px; padding: 10px 14px; border-radius: var(--r-sm); color: #94A3B8; font-weight: 500; text-decoration: none; position: relative; }
 .nav a:hover { background: rgba(255, 255, 255, .05); color: #fff; }
@@ -392,7 +393,7 @@ table.tbl { width: 100%; border-collapse: collapse; }
 }
 @media (max-width: 1023px) {
   .shell { grid-template-columns: 1fr; }
-  .sidebar { position: fixed; left: 0; top: 0; bottom: 0; width: 272px; transform: translateX(-100%); transition: transform .2s; box-shadow: var(--sh-3); }
+  .sidebar { position: fixed; left: 0; top: 0; bottom: 0; height: auto; max-height: 100dvh; width: 272px; transform: translateX(-100%); transition: transform .2s; box-shadow: var(--sh-3); }
   .sidebar.open { transform: none; }
   .burger { display: inline-flex; }
   .scrim { position: fixed; inset: 0; background: rgba(15, 30, 61, .5); z-index: 35; }
@@ -518,3 +519,74 @@ table.tbl { width: 100%; border-collapse: collapse; }
 .login-form { position: relative; }
 .login-lang { position: absolute; top: 16px; right: 16px; background: #fff; }
 @media (max-width: 480px) { .kpi .ico { width: 30px; height: 30px; top: 12px; right: 12px; } .kpi .lbl { padding-right: 36px; font-size: 11px; letter-spacing: .02em; } }
+
+/* ---------- Revisi 3: blok akun & keluar selalu terlihat tanpa scroll ---------- */
+.side-foot { padding-bottom: max(12px, env(safe-area-inset-bottom)); background: var(--navy-900); }
+@media (max-height: 820px) { .side-card { display: none; } .brand { padding: 14px 20px; } .nav a { padding: 9px 14px; } }
+@media (max-height: 560px) { .nav a { padding: 7px 14px; } .nav .grp { padding: 8px 14px 4px; } }
+@media (min-width: 1024px) {
+  .is-demo .demo-ribbon { position: sticky; top: 0; z-index: 45; height: 24px; line-height: 16px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .is-demo .sidebar { top: 24px; height: calc(100vh - 24px); height: calc(100dvh - 24px); }
+  .is-demo .topbar { top: 24px; }
+}
+.banner-danger { background: #FEF2F2; border-color: #FECACA; color: #991B1B; }
+.banner-danger svg { color: var(--fail); }
+.btn-danger-ghost { color: var(--fail) !important; }
+.btn-danger-ghost:hover:not(:disabled) { background: #FEF2F2 !important; }
+.hapus-list { margin: 0; padding-left: 20px; font-size: 13px; line-height: 1.5; display: flex; flex-direction: column; gap: 4px; }
+.modal-f .btn-danger:not(:disabled) { background: var(--fail); color: #fff; border-color: var(--fail); }
+.modal-f .btn-danger:disabled { opacity: .45; cursor: not-allowed; }
+
+/* ---------- Editor foto lampiran ---------- */
+.lamp-kamera { justify-content: center; }
+.fe-modal { max-width: 980px !important; }
+.fe-modal .modal-b { padding: 12px 16px; }
+.fe { display: flex; flex-direction: column; gap: 10px; min-width: 0; }
+.fe-bar { display: flex; flex-wrap: wrap; gap: 4px; align-items: center; }
+.fe-tool { display: inline-flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px; min-width: 56px; min-height: 48px; padding: 4px 6px; border: 1px solid var(--border); border-radius: var(--r-sm); background: var(--surface); color: var(--navy-700); font-size: 11px; font-weight: 500; cursor: pointer; }
+.fe-tool svg { width: 18px; height: 18px; }
+.fe-tool:hover:not(:disabled) { border-color: var(--border-strong); background: var(--canvas); }
+.fe-tool[aria-pressed="true"] { background: var(--navy-700); border-color: var(--navy-700); color: #fff; }
+.fe-tool:disabled { opacity: .4; cursor: not-allowed; }
+.fe-sp { flex: 1; }
+.fe-sub { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; padding: 8px 10px; border-radius: var(--r-md); background: var(--head); border: 1px solid var(--border); }
+.fe-sub[hidden] { display: none; }
+.fe-warna { display: flex; gap: 6px; }
+.fe-warna button { width: 28px; height: 28px; border-radius: 50%; border: 2px solid var(--border-strong); cursor: pointer; padding: 0; }
+.fe-warna button[aria-pressed="true"] { outline: 3px solid var(--orange); outline-offset: 2px; }
+.fe-uk { flex-wrap: nowrap !important; }
+.fe-uk button { min-width: 36px; flex: 0 0 auto !important; }
+.fe-teks { flex: 1 1 180px; min-width: 0; height: 36px; }
+.fe-slider { display: flex; align-items: center; gap: 8px; font-size: 13px; flex: 1 1 220px; min-width: 0; }
+.fe-slider input { flex: 1; min-width: 80px; accent-color: var(--orange); }
+.fe-slider b { width: 44px; text-align: right; font-size: 12px; }
+.fe-wrap { display: flex; justify-content: center; align-items: center; background: repeating-conic-gradient(#E2E8F0 0% 25%, #F8FAFC 0% 50%) 50% / 16px 16px; border-radius: var(--r-md); padding: 8px; min-height: 200px; overflow: hidden; }
+.fe-stage { position: relative; display: inline-block; line-height: 0; max-width: 100%; }
+.fe-c { display: block; max-width: 100%; max-height: min(56vh, 600px); max-height: min(56dvh, 600px); width: auto; height: auto; box-shadow: var(--sh-2); }
+.fe-o { position: absolute; inset: 0; width: 100%; height: 100%; touch-action: auto; }
+.fe-info { margin: 0; text-align: center; }
+@media (max-width: 640px) {
+  .fe-modal { max-height: 100dvh !important; height: 100dvh; border-radius: 0 !important; }
+  .modal-bg:has(.fe-modal) { padding: 0; }
+  .fe-bar { flex-wrap: nowrap; overflow-x: auto; padding-bottom: 4px; scrollbar-width: none; }
+  .fe-tool { min-width: 52px; flex: 0 0 auto; }
+  .fe-sp { display: none; }
+  .fe-c { max-height: 50dvh; }
+  .fe-modal .modal-f .btn { flex: 1 1 auto; }
+}
+.fe-bar, .fe-sub { min-width: 0; max-width: 100%; contain: inline-size; }
+.fe-modal, .fe-modal .modal-b, .fe-wrap { min-width: 0; }
+.modal-bg:has(.fe-modal) { grid-template-columns: minmax(0, 980px); justify-content: center; }
+
+/* ---------- PWA: tombol pasang ---------- */
+.nav-pasang { display: flex; align-items: center; gap: 12px; margin-top: 10px; padding: 10px 14px; border-radius: var(--r-sm); border: 1px dashed rgba(243, 112, 33, .55); background: rgba(243, 112, 33, .08); color: #FDBA74; font: inherit; font-weight: 600; font-size: 14px; cursor: pointer; text-align: left; }
+.nav-pasang:hover { background: rgba(243, 112, 33, .16); color: #fff; }
+.nav-pasang[hidden], [data-pasang][hidden] { display: none !important; }
+.pasang-ios { margin: 0; padding-left: 20px; display: flex; flex-direction: column; gap: 10px; line-height: 1.5; }
+.pasang-ios svg { width: 16px; height: 16px; vertical-align: -3px; color: var(--info, #2563EB); }
+@media (display-mode: standalone) { .demo-ribbon { padding-top: max(4px, env(safe-area-inset-top)); } }
+.fe-tool[aria-pressed="true"], .fe-tool[aria-pressed="true"]:hover { background: var(--navy-700); border-color: var(--navy-700); color: #fff; }
+.fe-slider > span { width: 84px; flex: none; }
+.file-row { min-width: 0; }
+.file-row .grow { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+@media (max-width: 1200px) { .qc-layout { grid-template-columns: minmax(0, 1fr); } }

@@ -114,6 +114,7 @@ function renderLogin(pesan) {
       '<button class="btn btn-block" data-demo="FISMED">' + ic('flask-conical') + 'Mode Demo — Fisikawan Medis</button>' +
       '<button class="btn btn-block btn-ghost" data-demo="ATASAN">' + ic('eye') + 'Mode Demo — Atasan (lihat saja)</button>' +
       '<p class="hint" style="text-align:center">Data contoh fiktif, hanya di browser ini, hilang saat dimuat ulang.</p></div>' : '') +
+    '<div style="margin-top:16px">' + tombolPasang('btn btn-block btn-ghost') + '</div>' +
     '<p class="hint" style="margin-top:20px;text-align:center">Belum terdaftar? Hubungi fisikawan medis Anda.</p>' +
     '</div></section></div>';
   $$('[data-demo]').forEach(b => b.addEventListener('click', () => mulaiDemo(b.dataset.demo)));
@@ -173,10 +174,11 @@ function renderShell() {
   const nav = NAV.filter(n => !n.fismed || f).map(n => n.grp ? '<div class="grp">' + esc(n.grp) + '</div>' :
     '<a href="#/' + n.id + '" data-nav="' + n.id + '">' + ic(n.ikon) + '<span>' + esc(n.label) + '</span>' + (n.hitung && hitungBelum() ? '<span class="cnt">' + hitungBelum() + '</span>' : '') + '</a>').join('');
   const rsAtasan = !f ? rsAktif().map(r => r.nama).join(', ') : '';
+  $('#app').classList.toggle('is-demo', !!AppState.demo);
   $('#app').innerHTML = (AppState.demo ? '<div class="demo-ribbon">MODE DEMO — data contoh fiktif, tidak tersimpan ke server</div>' : '') +
     '<div class="shell"><aside class="sidebar" id="sidebar">' +
     '<div class="brand"><div class="logo">' + ic('shield-check') + '</div><div><b>VeriRad</b><span>Smart QC Radiologi</span></div></div>' +
-    '<nav class="nav" aria-label="Menu utama">' + nav + '</nav>' +
+    '<nav class="nav" aria-label="Menu utama">' + nav + tombolPasang('nav-pasang') + '</nav>' +
     '<div class="side-foot">' + (!f ? '<div class="side-card"><b>' + ic('eye') + 'Akses lihat saja</b>Anda memantau hasil QC dan laporan untuk ' + esc(rsAtasan || 'RS Anda') + '.</div>' :
       '<div class="side-card"><b>' + ic('shield-check') + 'QC tepat, laporan cepat</b>Toleransi mengikuti template yang Anda tetapkan.</div>') +
     '<div class="user-box"><div class="avatar">' + (AppState.foto ? '<img src="' + esc(AppState.foto) + '" alt="">' : esc(inisial(me.nama || me.email))) + '</div>' +

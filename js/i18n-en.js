@@ -363,3 +363,48 @@ I18N.pola.push(
   [/^(.+) ·$/, (m, a) => tb(a) + ' ·'],
   [/^([^/]+)( \/ [^/]+)+$/, m => m.split(' / ').map(tb).join(' / ')]
 );
+
+/* ---------- Revisi 3: hapus RS/alat, editor foto, PWA ---------- */
+Object.assign(I18N.kamus, {
+  'Hapus rumah sakit': 'Delete hospital', 'Hapus alat': 'Delete unit', 'Yang akan dihapus:': 'The following will be deleted:',
+  'Tindakan ini permanen dan tidak bisa dibatalkan.': 'This action is permanent and cannot be undone.', 'untuk mengonfirmasi': 'to confirm',
+  'Data inventaris': 'Equipment record', 'Belum ada riwayat QC untuk alat ini': 'No QC history for this unit yet',
+  'Lampiran & foto bukti alat ini (dipindah ke sampah Google Drive)': 'Attachments & photo evidence for this unit (moved to the Google Drive trash)',
+  'Bila alat hanya sudah tidak dipakai, cukup matikan saklar': 'If the unit is simply no longer in use, just switch off',
+  'lewat tombol Ubah — riwayat QC tetap tersimpan untuk tren dan laporan lama.': 'via the Edit button — its QC history is kept for trends and past reports.',
+  'Profil rumah sakit, logo, dan nomor SIP untuk RS ini': 'Hospital profile, logo and SIP number for this hospital',
+  'Tidak ada atasan yang ditautkan ke RS ini': 'No supervisors are linked to this hospital',
+  'Bila Anda hanya berhenti memegang RS ini, cukup matikan saklar': 'If you have simply stopped covering this hospital, just switch off',
+  '— data dan laporan lama tetap tersimpan.': '— its data and past reports are kept.',
+  // editor foto
+  'Edit foto': 'Edit photo', 'Edit foto dari kamera': 'Edit camera photo', 'Alat edit foto': 'Photo editing tools', 'Putar kiri': 'Rotate left', 'Putar kanan': 'Rotate right',
+  'Potong': 'Crop', 'Pena': 'Pen', 'Panah': 'Arrow', 'Kotak': 'Box', 'Teks': 'Text', 'Cahaya': 'Light', 'Urungkan': 'Undo', 'Asli': 'Original',
+  'Kembalikan ke foto asli': 'Revert to original photo', 'Pilih alat di atas. Foto disimpan sebagai JPEG.': 'Choose a tool above. The photo is saved as JPEG.',
+  'Unggah tanpa edit': 'Upload without editing', 'Simpan & unggah': 'Save & upload', 'Simpan perubahan': 'Save changes', 'Warna': 'Colour', 'Ketebalan': 'Thickness',
+  'Ketik teks, lalu ketuk foto': 'Type text, then tap the photo', 'Ketuk foto untuk menaruh teks.': 'Tap the photo to place the text.', 'Gores di atas foto.': 'Draw on the photo.',
+  'Geser kotak atau sudutnya untuk memilih area.': 'Drag the box or its corners to select the area.', 'Terapkan potongan': 'Apply crop', 'Kecerahan': 'Brightness',
+  'Kontras': 'Contrast', 'Normal': 'Reset', 'Ketik teksnya dulu di kolom atas.': 'Type the text in the box above first.',
+  'Gambar tidak bisa dibuka untuk diedit.': 'The image could not be opened for editing.', 'Ambil foto': 'Take photo',
+  'Foto bisa diputar, dipotong, dan diberi tanda sebelum diunggah.': 'Photos can be rotated, cropped and annotated before uploading.', 'Foto diperbarui.': 'Photo updated.',
+  // PWA
+  'Pasang aplikasi': 'Install app', 'Pasang VeriRad di iPhone / iPad': 'Install VeriRad on iPhone / iPad', 'Buka VeriRad di': 'Open VeriRad in', 'Safari': 'Safari',
+  'Ketuk tombol': 'Tap the', 'Bagikan': 'Share', 'di bilah bawah (iPhone) atau atas (iPad).': 'button in the bottom bar (iPhone) or top bar (iPad).', 'Pilih': 'Choose',
+  'Tambah ke Layar Utama': 'Add to Home Screen', 'Ketuk': 'Tap', 'Tambah': 'Add',
+  '. Ikon VeriRad muncul di layar utama dan terbuka layar penuh seperti aplikasi.': '. The VeriRad icon appears on your home screen and opens full-screen like an app.',
+  'Setelah terpasang, masuk sekali lagi dengan akun Google di aplikasi tersebut.': 'Once installed, sign in again with your Google account inside the app.',
+  'Mengerti': 'Got it', 'VeriRad terpasang di perangkat Anda.': 'VeriRad is installed on your device.', 'Aplikasi HP/laptop': 'Phone/laptop app',
+  'Terpasang': 'Installed', 'Bisa dipasang': 'Can be installed', 'Buka di Chrome/Edge/Safari untuk memasang': 'Open in Chrome/Edge/Safari to install'
+});
+I18N.pola.unshift(
+  [/^Hapus alat (.+)\?$/, 'Delete unit $1?'],
+  [/^Ketik kode alat (.+) untuk menghapus alat beserta riwayat QC-nya\.$/, 'Type the unit code $1 to delete the unit together with its QC history.'],
+  [/^Ketik (.+) untuk menghapus rumah sakit ini\.$/, 'Type $1 to delete this hospital.'],
+  [/^Alat (.+) dihapus\.$/, 'Unit $1 deleted.'], [/^Rumah sakit (.+) dihapus\.$/, 'Hospital $1 deleted.'],
+  [/^Seluruh riwayat QC alat ini \((\d+) sesi tercatat, (\d+) final\) beserta hasil per parameter$/, 'All QC history for this unit ($1 sessions on record, $2 final) including per-parameter results'],
+  [/^Seluruh riwayat QC \((\d+) sesi tercatat\) beserta lampiran foto$/, 'All QC history ($1 sessions on record) including photo attachments'],
+  [/^(\d+) alat terdaftar(?: \((.+)\))?$/, (m, n, l) => n + ' registered unit(s)' + (l ? ' (' + l + ')' : '')],
+  [/^(\d+) arsip laporan PDF \(berkas dipindah ke sampah Google Drive, bisa dipulihkan dari Drive selama 30 hari\)$/, '$1 archived PDF report(s) (files moved to the Google Drive trash; recoverable from Drive for 30 days)'],
+  [/^Akses (\d+) atasan ke RS ini \(atasan tanpa RS lain dinonaktifkan\)$/, 'Access of $1 supervisor(s) to this hospital (supervisors with no other hospital are deactivated)'],
+  [/^Edit foto · (.+)$/, 'Edit photo · $1'], [/^Warna (#[0-9A-Fa-f]{6})$/, 'Colour $1'],
+  [/^(\d+) × (\d+) px( · diedit)?$/, (m, a, b, d) => a + ' × ' + b + ' px' + (d ? ' · edited' : '')]
+);

@@ -169,6 +169,25 @@ const Demo = (function () {
         db.alat = db.alat.filter(a => a.alat_id !== o.alat_id).concat([o]);
         return ok(o, 'Alat tersimpan.');
       }
+      case 'alat.hapus': {
+        const a = db.alat.find(x => x.alat_id === d.alat_id); if (!a) return fail('Alat tidak ditemukan.');
+        if (db.sesi.some(x => x.alat_id === a.alat_id) && String(d.konfirmasi || '').trim().toUpperCase() !== String(a.kode || '').toUpperCase()) return fail('Ketik kode alat ' + a.kode + ' untuk menghapus alat beserta riwayat QC-nya.');
+        const sid = db.sesi.filter(x => x.alat_id === a.alat_id).map(x => x.sesi_id);
+        db.hasil = db.hasil.filter(h => sid.indexOf(h.sesi_id) === -1); db.lampiran = db.lampiran.filter(l => l.alat_id !== a.alat_id);
+        db.sesi = db.sesi.filter(x => x.alat_id !== a.alat_id); db.alat = db.alat.filter(x => x.alat_id !== a.alat_id);
+        return ok({ alat_id: a.alat_id, jumlah: { sesi: sid.length } }, 'Alat ' + a.kode + ' dihapus.');
+      }
+      case 'rs.hapus': {
+        const r = db.rs.find(x => x.rs_id === d.rs_id); if (!r) return fail('Rumah sakit tidak ditemukan.');
+        const kata = String(r.kode || r.nama || '').trim().toUpperCase();
+        if (String(d.konfirmasi || '').trim().toUpperCase() !== kata) return fail('Ketik ' + kata + ' untuk menghapus rumah sakit ini.');
+        const aid = db.alat.filter(a => a.rs_id === r.rs_id).map(a => a.alat_id), sid = db.sesi.filter(x => x.rs_id === r.rs_id).map(x => x.sesi_id);
+        db.hasil = db.hasil.filter(h => sid.indexOf(h.sesi_id) === -1); db.lampiran = db.lampiran.filter(l => l.rs_id !== r.rs_id && aid.indexOf(l.alat_id) === -1);
+        db.sesi = db.sesi.filter(x => x.rs_id !== r.rs_id); db.alat = db.alat.filter(a => a.rs_id !== r.rs_id);
+        db.laporan = db.laporan.filter(l => l.rs_id !== r.rs_id); db.rs = db.rs.filter(x => x.rs_id !== r.rs_id);
+        db.pengguna.forEach(u => { if (u.peran !== 'ATASAN') return; const ids = String(u.rs_ids || '').split(',').filter(x => x && x !== r.rs_id); if (ids.length !== String(u.rs_ids || '').split(',').filter(Boolean).length) { u.rs_ids = ids.join(','); if (!ids.length) u.aktif = 'FALSE'; } });
+        return ok({ rs_id: r.rs_id, jumlah: { alat: aid.length, sesi: sid.length } }, 'Rumah sakit ' + r.nama + ' dihapus.');
+      }
       case 'template.simpan': {
         const lama = db.templates.find(t => t.template_id === d.template.template_id);
         const tid = lama ? lama.template_id : id('TPL');

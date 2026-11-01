@@ -43,7 +43,7 @@ function formRs(box, rs, el) {
     '<div class="field"><span class="lbl">Status</span><label class="switch" style="height:38px"><input type="checkbox" id="f-aktif"' + (vrBenar(rs.aktif) ? ' checked' : '') + '><span class="trk"></span>Aktif</label></div>' +
     fld('f-atasan', 'Email atasan penerima laporan', rs.email_atasan, false, 'span-2', 'pisahkan dengan koma') +
     fld('f-cc', 'Email tembusan (CC)', rs.email_cc, false, 'span-2', 'opsional') +
-    '</div></div></form><div class="card-f">' + (baru ? '<button class="btn" id="f-batal">Batal</button>' : '') + '<button class="btn btn-primary" id="f-simpan">' + ic('save') + 'Simpan</button></div>';
+    '</div></div></form><div class="card-f">' + (baru ? '<button class="btn" id="f-batal">Batal</button>' : '<button class="btn btn-ghost btn-danger-ghost" id="f-hapus" style="margin-right:auto">' + ic('trash-2') + 'Hapus rumah sakit</button>') + '<button class="btn btn-primary" id="f-simpan">' + ic('save') + 'Simpan</button></div>';
   if (!baru) dataUriBerkas(rs.logo_file_id).then(u => { const b = $('#logo-box'); if (u && b) { b.classList.remove('xbox'); b.innerHTML = '<img src="' + u + '" alt="Logo ' + esc(rs.nama) + '">'; } });
   const fl = $('#f-logo', box);
   if (fl) fl.addEventListener('change', async () => {
@@ -56,6 +56,8 @@ function formRs(box, rs, el) {
       toast('Logo tersimpan.', 'success'); formRs(box, rs, el);
     } catch (e) { toast(e.message, 'error'); }
   });
+  const bh = $('#f-hapus', box);
+  if (bh) bh.addEventListener('click', () => hapusRs(rs, el));
   const bt = $('#f-batal', box);
   if (bt) bt.addEventListener('click', () => { KelRs = ''; Halaman.kelola.render(el); });
   $('#f-simpan', box).addEventListener('click', async e => {
@@ -86,11 +88,13 @@ function daftarAlat(box, rs) {
     (alat.length ? '<div class="tbl-wrap"><table class="tbl"><thead><tr><th>Kode</th><th>Jenis</th><th>Merek & tipe</th><th>No. seri tabung</th><th>Ruangan</th><th class="c">QC ' + esc(singkatBulan(AppState.periode)) + '</th><th class="c">Status</th><th></th></tr></thead><tbody>' +
       alat.map(a => '<tr><td><b class="mono">' + esc(a.kode) + '</b></td><td>' + esc((getTpl(a.template_id) || {}).nama || '?') + '</td><td>' + esc(a.merek + ' ' + a.tipe) + '</td><td class="m">' + esc(a.no_seri_tabung) + '</td><td>' + esc(a.ruangan) + '</td>' +
         '<td class="c">' + badge(statusAlat(a.alat_id, AppState.periode).st) + '</td><td class="c">' + (vrBenar(a.aktif) ? '<span class="badge b-lulus">Aktif</span>' : '<span class="badge b-na">Nonaktif</span>') + '</td>' +
-        '<td><button class="btn btn-sm btn-ghost" data-edit="' + a.alat_id + '">' + ic('pencil') + 'Ubah</button></td></tr>').join('') + '</tbody></table></div>'
+        '<td><div class="hstack" style="gap:4px;justify-content:flex-end;flex-wrap:nowrap"><button class="btn btn-sm btn-ghost" data-edit="' + a.alat_id + '">' + ic('pencil') + 'Ubah</button>' +
+        '<button class="btn btn-sm btn-ghost btn-icon btn-danger-ghost" data-hapus-alat="' + a.alat_id + '" title="Hapus ' + esc(a.kode) + '" aria-label="Hapus ' + esc(a.kode) + '">' + ic('trash-2') + '</button></div></td></tr>').join('') + '</tbody></table></div>'
       : kosong('Belum ada alat', 'Daftarkan alat radiologi di rumah sakit ini.', '<button class="btn btn-primary" id="alat-baru-2">' + ic('plus') + 'Tambah alat</button>'));
   $('#alat-baru', box).addEventListener('click', () => modalAlat(rs, null));
   const b2 = $('#alat-baru-2', box); if (b2) b2.addEventListener('click', () => modalAlat(rs, null));
   $$('[data-edit]', box).forEach(b => b.addEventListener('click', () => modalAlat(rs, getAlat(b.dataset.edit))));
+  $$('[data-hapus-alat]', box).forEach(b => b.addEventListener('click', () => hapusAlat(getAlat(b.dataset.hapusAlat))));
 }
 
 function modalAlat(rs, a) {
@@ -117,5 +121,85 @@ function modalAlat(rs, a) {
       if (i > -1) AppState.alat[i] = r.data; else AppState.alat.push(r.data);
       toast(r.message, 'success'); renderShell(); rute();
     } }]
+  });
+}
+
+/* ---------- Hapus rumah sakit / alat ---------- */
+/** Modal hapus permanen. Bila `kata` diisi, tombol Hapus aktif setelah kata itu diketik ulang. */
+function modalHapus(o) {
+  const ketik = o.kata ? '<div class="field" style="margin-top:14px"><label for="hp-kata">Ketik <b class="mono" data-no-i18n>' + esc(o.kata) + '</b> untuk mengonfirmasi</label>' +
+    '<input class="input" id="hp-kata" autocomplete="off" autocapitalize="characters" spellcheck="false"></div>' : '';
+  const m = modal({
+    judul: o.judul, ikon: 'trash-2',
+    isi: '<div class="banner banner-danger small">' + ic('triangle-alert') + '<div class="t"><b>Tindakan ini permanen dan tidak bisa dibatalkan.</b></div></div>' +
+      '<p class="small" style="margin:12px 0 6px">Yang akan dihapus:</p><ul class="hapus-list">' + o.daftar.map(x => '<li>' + x + '</li>').join('') + '</ul>' +
+      (o.saran ? '<p class="hint" style="margin:10px 0 0">' + ic('info') + ' ' + o.saran + '</p>' : '') + ketik,
+    tombol: [{ label: 'Batal' }, { label: o.label, kelas: 'btn-danger', ikon: 'trash-2', aksi: async bg => {
+      const r = await api(o.aksi, Object.assign({}, o.data, { konfirmasi: o.kata ? $('#hp-kata', bg).value : '' }));
+      if (!r.success) { toast(r.message, 'error'); return false; }
+      o.sukses(r); toast(r.message, 'success');
+    } }]
+  });
+  if (o.kata) {
+    const btn = $('.modal-f .btn-danger', m), inp = $('#hp-kata', m), cocok = () => inp.value.trim().toUpperCase() === o.kata;
+    btn.disabled = true;
+    inp.addEventListener('input', () => { btn.disabled = !cocok(); });
+    inp.addEventListener('keydown', e => { if (e.key === 'Enter' && cocok()) btn.click(); });
+    // jaga agar tombol tetap terkunci sampai kata cocok (modal() membuka kunci setelah aksi gagal)
+    new MutationObserver(() => { if (!btn.disabled && !cocok()) btn.disabled = true; }).observe(btn, { attributes: true, attributeFilter: ['disabled'] });
+  }
+  return m;
+}
+function buangAlatLokal(ids) {
+  const sid = AppState.sesi.filter(s => ids.indexOf(s.alat_id) > -1).map(s => s.sesi_id);
+  sid.forEach(id => { delete AppState.hasil[id]; });
+  AppState.sesi = AppState.sesi.filter(s => ids.indexOf(s.alat_id) === -1);
+  AppState.alat = AppState.alat.filter(a => ids.indexOf(a.alat_id) === -1);
+}
+function hapusAlat(a) {
+  if (!a) return;
+  const nSesi = AppState.sesi.filter(s => s.alat_id === a.alat_id).length;
+  const nFinal = AppState.sesi.filter(s => s.alat_id === a.alat_id && s.status_sesi === 'FINAL').length;
+  modalHapus({
+    judul: 'Hapus alat ' + a.kode + '?', label: 'Hapus alat',
+    daftar: ['Data inventaris <b>' + esc(a.kode) + '</b> — ' + esc([a.merek, a.tipe].filter(Boolean).join(' ') || '—') + (a.ruangan ? ' · ' + esc(a.ruangan) : ''),
+      nSesi ? 'Seluruh riwayat QC alat ini (' + nSesi + ' sesi tercatat, ' + nFinal + ' final) beserta hasil per parameter' : 'Belum ada riwayat QC untuk alat ini',
+      'Lampiran & foto bukti alat ini (dipindah ke sampah Google Drive)'],
+    saran: nSesi ? 'Bila alat hanya sudah tidak dipakai, cukup matikan saklar <b>Aktif</b> lewat tombol Ubah — riwayat QC tetap tersimpan untuk tren dan laporan lama.' : '',
+    kata: nSesi ? String(a.kode).toUpperCase() : '',
+    aksi: 'alat.hapus', data: { alat_id: a.alat_id },
+    sukses: () => { buangAlatLokal([a.alat_id]); renderShell(); rute(); }
+  });
+}
+function hapusRs(rs, el) {
+  const alat = AppState.alat.filter(a => a.rs_id === rs.rs_id);
+  const nSesi = AppState.sesi.filter(s => s.rs_id === rs.rs_id).length;
+  const nLap = AppState.laporan.filter(l => l.rs_id === rs.rs_id).length;
+  const atasan = (AppState.pengguna || []).filter(u => u.peran === 'ATASAN' && String(u.rs_ids || '').split(',').indexOf(rs.rs_id) > -1);
+  const kata = String(rs.kode || rs.nama || '').trim().toUpperCase();
+  modalHapus({
+    judul: 'Hapus ' + rs.nama + '?', label: 'Hapus rumah sakit',
+    daftar: ['Profil rumah sakit, logo, dan nomor SIP untuk RS ini',
+      alat.length + ' alat terdaftar' + (alat.length ? ' (' + alat.map(a => esc(a.kode)).join(', ') + ')' : ''),
+      'Seluruh riwayat QC (' + nSesi + ' sesi tercatat) beserta lampiran foto',
+      nLap + ' arsip laporan PDF (berkas dipindah ke sampah Google Drive, bisa dipulihkan dari Drive selama 30 hari)',
+      atasan.length ? 'Akses ' + atasan.length + ' atasan ke RS ini (atasan tanpa RS lain dinonaktifkan)' : 'Tidak ada atasan yang ditautkan ke RS ini'],
+    saran: 'Bila Anda hanya berhenti memegang RS ini, cukup matikan saklar <b>Aktif</b> — data dan laporan lama tetap tersimpan.',
+    kata, aksi: 'rs.hapus', data: { rs_id: rs.rs_id },
+    sukses: () => {
+      buangAlatLokal(alat.map(a => a.alat_id));
+      AppState.sesi = AppState.sesi.filter(s => s.rs_id !== rs.rs_id);
+      AppState.laporan = AppState.laporan.filter(l => l.rs_id !== rs.rs_id);
+      AppState.rs = AppState.rs.filter(r => r.rs_id !== rs.rs_id);
+      (AppState.pengguna || []).forEach(u => {
+        if (u.peran !== 'ATASAN') return;
+        const ids = String(u.rs_ids || '').split(',').filter(Boolean), sisa = ids.filter(x => x !== rs.rs_id);
+        if (sisa.length !== ids.length) { u.rs_ids = sisa.join(','); if (!sisa.length) u.aktif = 'FALSE'; }
+      });
+      if (AppState.filterRs === rs.rs_id) AppState.filterRs = '';
+      if (typeof LP !== 'undefined' && LP.rs === rs.rs_id) { LP.rs = ''; LP.rsEmail = ''; }
+      KelRs = '';
+      renderShell(); rute();
+    }
   });
 }

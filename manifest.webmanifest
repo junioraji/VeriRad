@@ -1,0 +1,26 @@
+{
+  "id": "./",
+  "name": "VeriRad — Smart QC for Safer Radiology",
+  "short_name": "VeriRad",
+  "description": "QC bulanan alat radiologi untuk fisikawan medis: input QC, penilaian otomatis, tren, dan laporan PDF.",
+  "lang": "id",
+  "dir": "ltr",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "display_override": ["standalone", "minimal-ui"],
+  "orientation": "any",
+  "background_color": "#0F1E3D",
+  "theme_color": "#0F1E3D",
+  "categories": ["medical", "productivity", "utilities"],
+  "icons": [
+    { "src": "icons/icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
+    { "src": "icons/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" },
+    { "src": "icons/maskable-192.png", "sizes": "192x192", "type": "image/png", "purpose": "maskable" },
+    { "src": "icons/maskable-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
+  ],
+  "shortcuts": [
+    { "name": "Input QC", "short_name": "Input QC", "url": "./#/input", "icons": [{ "src": "icons/icon-192.png", "sizes": "192x192", "type": "image/png" }] },
+    { "name": "Laporan", "short_name": "Laporan", "url": "./#/laporan", "icons": [{ "src": "icons/icon-192.png", "sizes": "192x192", "type": "image/png" }] }
+  ]
+}

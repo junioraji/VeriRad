@@ -46,7 +46,9 @@ daftarHalaman('pengaturan', {
       '<div class="card"><div class="card-h"><h2>' + ic('info') + 'Tentang aplikasi</h2></div><div class="card-b"><dl class="kv" style="margin:0">' +
       '<dt>Versi</dt><dd>VeriRad ' + esc(VR_VERSI) + '</dd><dt>Mode</dt><dd>' + (AppState.demo ? 'Demo (data lokal)' : 'Server Google Apps Script') + '</dd>' +
       '<dt>Backend</dt><dd>' + esc(AppState.demo ? '—' : GAS_URL.replace(/\/macros\/s\/(.{6}).*\/exec/, '/macros/s/$1…/exec')) + '</dd>' +
-      '<dt>Toleransi disetujui</dt><dd title="' + esc(p.toleransi_disetujui || '') + '">' + esc(p.toleransi_disetujui ? String(p.toleransi_disetujui).slice(0, 10) : 'belum') + '</dd></dl>' +
+      '<dt>Toleransi disetujui</dt><dd title="' + esc(p.toleransi_disetujui || '') + '">' + esc(p.toleransi_disetujui ? String(p.toleransi_disetujui).slice(0, 10) : 'belum') + '</dd>' +
+      '<dt>Aplikasi HP/laptop</dt><dd>' + (PWA.standalone ? 'Terpasang' : PWA.bisa() ? 'Bisa dipasang' : 'Buka di Chrome/Edge/Safari untuk memasang') + '</dd></dl>' +
+      '<div style="margin-top:12px">' + tombolPasang('btn btn-sm') + '</div>' +
       '<p class="hint" style="margin-top:12px">Ketik <span class="mono">Perf.table()</span> di console browser untuk melihat waktu respons server.</p></div></div></div>';
     dataUriBerkas(p.ttd_file_id).then(u => { const b = $('#ttd-box'); if (u && b) { b.classList.remove('xbox'); b.innerHTML = '<img src="' + u + '" alt="Tanda tangan">'; } });
     $('#p-simpan', el).addEventListener('click', async e => {
