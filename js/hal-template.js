@@ -4,7 +4,63 @@
  * ===================================================================== */
 'use strict';
 
-const TP = { id: '', kat: '', meta: null, params: null, kotor: false };
+const TP = { id: '', kat: '', meta: null, params: null, kotor: false, pilih: new Set() };
+
+/* ---------- Papan klip parameter (salin antar-template) ---------- */
+const KlipParam = {
+  ambil() { return Store.get(userKey('klip:param'), null); },
+  isi(asal, params) { Store.set(userKey('klip:param'), { asal, waktu: Date.now(), params }); },
+  kosongkan() { Store.del(userKey('klip:param')); }
+};
+const reKode = k => new RegExp('\\b' + k + '\\b', 'g');
+function refParam(p) {                                   // kode yang dipakai rumus / batas ekspresi
+  const teks = [p.tipe_input === 'HITUNG' ? p.formula : '', vrAngka(p.batas_min) === null ? p.batas_min : '', vrAngka(p.batas_maks) === null ? p.batas_maks : ''].join(' ');
+  const out = [];
+  (teks.match(/[A-Za-z_][A-Za-z0-9_]*/g) || []).forEach(k => { if (k.toUpperCase() === k && out.indexOf(k) === -1) out.push(k); });
+  return out;
+}
+/** Nomori ulang urutan sesuai susunan tampilan (per kategori). */
+function nomoriUlang() {
+  let n = 0;
+  VR_KATEGORI.forEach(k => vrUrutParam(TP.params.filter(p => p.kategori === k)).forEach(p => { n += 10; p.urutan = String(n); }));
+  TP.params.filter(p => VR_KATEGORI.indexOf(p.kategori) === -1).forEach(p => { n += 10; p.urutan = String(n); });
+}
+/** Pindahkan parameter `kode` ke posisi sebelum/sesudah `target` (harus satu kategori). */
+function pindahParam(kode, target, sesudah) {
+  const a = TP.params.find(p => p.kode === kode), b = TP.params.find(p => p.kode === target);
+  if (!a || !b || a === b) return false;
+  if (a.kategori !== b.kategori) { toast('Urutan hanya bisa diubah di dalam kategori yang sama. Ubah kategorinya lewat tombol Ubah.', 'warning'); return false; }
+  const daftar = vrUrutParam(TP.params.filter(p => p.kategori === a.kategori)).filter(p => p !== a);
+  const i = daftar.indexOf(b);
+  daftar.splice(sesudah ? i + 1 : i, 0, a);
+  daftar.forEach((p, j) => { p.urutan = String(j + 1); });
+  nomoriUlang();
+  return true;
+}
+/** Tempel salinan parameter; kode bentrok diberi akhiran _2, _3… dan rumus ikut disesuaikan. */
+function tempelParam(list) {
+  const ada = new Set(TP.params.map(p => p.kode)), ganti = {};
+  list.forEach(p => {
+    let k = p.kode, i = 2;
+    while (ada.has(k)) { k = (p.kode.slice(0, 27) + '_' + i++); }
+    ada.add(k); ganti[p.kode] = k;
+  });
+  const baru = list.map((p, i) => {
+    const c = Object.assign({}, p, { kode: ganti[p.kode], urutan: String(1e6 + i) });
+    delete c.param_id; delete c.template_id;
+    Object.keys(ganti).forEach(lama => {
+      if (lama === ganti[lama]) return;
+      if (c.tipe_input === 'HITUNG') c.formula = String(c.formula || '').replace(reKode(lama), ganti[lama]);
+      ['batas_min', 'batas_maks'].forEach(f => { if (vrAngka(c[f]) === null) c[f] = String(c[f] || '').replace(reKode(lama), ganti[lama]); });
+    });
+    return c;
+  });
+  TP.params = TP.params.concat(baru);
+  nomoriUlang();
+  const semua = TP.params.map(p => p.kode);
+  const putus = baru.filter(p => refParam(p).some(k => semua.indexOf(k) === -1));
+  return { jumlah: baru.length, diganti: Object.keys(ganti).filter(k => ganti[k] !== k).map(k => k + ' → ' + ganti[k]), putus: putus.map(p => p.kode) };
+}
 
 daftarHalaman('template', {
   judul: 'Template Toleransi', akses: 'fismed',
@@ -15,7 +71,7 @@ daftarHalaman('template', {
       '<div class="act"><button class="btn" id="tp-dup"' + (TP.id === 'BARU' ? ' disabled' : '') + '>' + ic('copy') + 'Duplikat</button><button class="btn btn-primary" id="tp-baru">' + ic('plus') + 'Template baru</button></div></div>' +
       '<div class="banner banner-warn">' + ic('scale') + '<div class="t small"><b>Tanggung jawab fisikawan medis.</b> Template bawaan hanyalah titik awal dari contoh laporan. Verifikasi setiap batas terhadap acuan yang berlaku. ' +
       'Menyimpan template membuat versi baru; sesi QC final yang sudah ada tetap memakai toleransi saat diuji.</div></div>' +
-      '<div class="row r-1-2"><div class="list-rs">' + list.map(t => {
+      '<div class="stack"><div class="list-rs tpl-list">' + list.map(t => {
         const n = paramsTpl(t.template_id).filter(p => vrBenar(p.aktif)), al = AppState.alat.filter(a => a.template_id === t.template_id && vrBenar(a.aktif)).length;
         const ragu = n.filter(p => /⚠/.test(p.keterangan || '')).length;
         return '<button class="rs-card card" data-t="' + t.template_id + '" aria-pressed="' + (t.template_id === TP.id) + '"><span class="hstack between"><span class="nm">' + esc(t.nama) + '</span><span class="tag tag-soft">v' + esc(t.versi) + '</span></span>' +
@@ -41,7 +97,7 @@ daftarHalaman('template', {
 });
 
 function pilihTemplate(id) {
-  TP.id = id; TP.kat = ''; TP.kotor = false;
+  TP.id = id; TP.kat = ''; TP.kotor = false; TP.pilih = new Set();
   if (id === 'BARU') { TP.meta = { template_id: '', nama: '', singkatan: '', aktif: 'TRUE', versi: '0' }; TP.params = []; return; }
   const t = getTpl(id);
   TP.meta = Object.assign({}, t);
@@ -65,14 +121,27 @@ function gambarTemplateKanan(box, el) {
     '<div><div class="k">Rumus otomatis</div><div class="v">' + ps.filter(p => p.tipe_input === 'HITUNG').length + '</div></div><div class="' + (Object.keys(err).length ? 'gagal' : 'lulus') + '"><div class="k">Error validasi</div><div class="v">' + Object.keys(err).length + '</div></div></div></div></div>' +
     '<div class="card"><div class="tabs" style="padding:0 12px"><button data-k="" aria-selected="' + !TP.kat + '">Semua <span class="cnt">' + ps.length + '</span></button>' +
     VR_KATEGORI.map((k, i) => '<button data-k="' + k + '" aria-selected="' + (TP.kat === k) + '">' + (i + 1) + '. ' + esc(k) + ' <span class="cnt">' + ps.filter(p => p.kategori === k).length + '</span></button>').join('') + '</div>' +
-    (tampil.length ? '<div class="tbl-wrap"><table class="tbl"><thead><tr><th>Urut</th><th>Parameter</th><th>Input & rumus</th><th>Toleransi</th><th class="c">Wajib</th><th class="c">N/A</th><th class="c">Aktif</th><th></th></tr></thead><tbody>' +
-      tampil.map(p => '<tr class="' + (err[p.kode] ? 'is-fail' : '') + '"><td class="m">' + esc(p.urutan) + '</td><td><span class="tag tag-soft">' + esc(p.kode) + '</span> <b>' + esc(p.nama) + '</b><span class="sub">' + esc(p.kategori + ' · ' + (p.kelompok || 'Umum')) + '</span>' +
+    toolbarParam() +
+    (tampil.length ? '<div class="tbl-wrap"><table class="tbl tbl-param"><thead><tr><th class="c" style="width:36px"><input type="checkbox" id="tp-semua" aria-label="Pilih semua parameter yang tampil"' + (tampil.length && tampil.every(p => TP.pilih.has(p.kode)) ? ' checked' : '') + '></th>' +
+      '<th style="width:64px" title="Seret untuk mengubah urutan">Urutan</th><th>Parameter</th><th>Input & rumus</th><th>Toleransi</th><th class="c">Wajib</th><th class="c">N/A</th><th class="c">Aktif</th><th></th></tr></thead><tbody>' +
+      tampil.map((p, i) => {
+        const sebelum = tampil[i - 1], sesudah = tampil[i + 1];
+        const bisaNaik = sebelum && sebelum.kategori === p.kategori, bisaTurun = sesudah && sesudah.kategori === p.kategori;
+        return '<tr class="' + (err[p.kode] ? 'is-fail' : '') + (TP.pilih.has(p.kode) ? ' is-sel' : '') + '" draggable="true" data-row="' + p.kode + '">' +
+        '<td class="c"><input type="checkbox" data-pilih="' + p.kode + '" aria-label="Pilih ' + esc(p.kode) + '"' + (TP.pilih.has(p.kode) ? ' checked' : '') + '></td>' +
+        '<td><div class="urut"><span class="grip" title="Seret untuk memindah">' + ic('grip-vertical') + '</span><span class="updown">' +
+        '<button class="btn btn-ghost btn-icon" data-naik="' + p.kode + '" aria-label="Naikkan ' + esc(p.kode) + '"' + (bisaNaik ? '' : ' disabled') + '>' + ic('chevron-up') + '</button>' +
+        '<button class="btn btn-ghost btn-icon" data-turun="' + p.kode + '" aria-label="Turunkan ' + esc(p.kode) + '"' + (bisaTurun ? '' : ' disabled') + '>' + ic('chevron-down') + '</button></span></div></td>' +
+        '<td><span class="tag tag-soft">' + esc(p.kode) + '</span> <b>' + esc(p.nama) + '</b><span class="sub">' + esc(p.kategori + ' · ' + (p.kelompok || 'Umum')) + '</span>' +
         (p.keterangan ? '<span class="sub" style="color:var(--orange-text)">' + esc(p.keterangan) + '</span>' : '') + (err[p.kode] ? '<span class="err-msg">' + ic('circle-alert') + esc(err[p.kode]) + '</span>' : '') + '</td>' +
         '<td class="small">' + esc(VR_TIPE_INPUT[p.tipe_input] || p.tipe_input) + (p.satuan ? ' · <span class="mono">' + esc(p.satuan) + '</span>' : '') + (p.tipe_input === 'HITUNG' ? '<span class="sub mono">= ' + esc(p.formula) + '</span>' : p.tipe_input === 'KUALITATIF' ? '<span class="sub">' + esc(p.opsi.split('|').join(' / ')) + '</span>' : '') + '</td>' +
         '<td class="m">' + (p.tipe_toleransi === 'TIDAK_ADA' ? '<span class="muted">data</span>' : esc(vrTeksToleransi(p, null, null, sep()))) + '<span class="sub">' + esc((VR_TIPE_TOL[p.tipe_toleransi] || '').split(' (')[0]) + '</span></td>' +
         '<td class="c">' + (vrBenar(p.wajib) ? '✓' : '—') + '</td><td class="c">' + (vrBenar(p.boleh_na) ? '✓' : '—') + '</td><td class="c">' + (vrBenar(p.aktif) ? '<span class="badge b-lulus">Ya</span>' : '<span class="badge b-na">Tidak</span>') + '</td>' +
-        '<td><div class="hstack" style="flex-wrap:nowrap"><button class="btn btn-sm btn-ghost btn-icon" data-ed="' + p.kode + '" aria-label="Ubah ' + esc(p.kode) + '">' + ic('pencil') + '</button><button class="btn btn-sm btn-ghost btn-icon" data-del="' + p.kode + '" aria-label="Hapus ' + esc(p.kode) + '">' + ic('trash-2') + '</button></div></td></tr>').join('') +
-      '</tbody></table></div>' : kosong('Belum ada parameter', 'Tambahkan parameter uji untuk kategori ini.')) +
+        '<td><div class="hstack" style="flex-wrap:nowrap"><button class="btn btn-sm btn-ghost btn-icon" data-ed="' + p.kode + '" aria-label="Ubah ' + esc(p.kode) + '" title="Ubah">' + ic('pencil') + '</button>' +
+        '<button class="btn btn-sm btn-ghost btn-icon" data-dupl="' + p.kode + '" aria-label="Duplikat ' + esc(p.kode) + '" title="Duplikat di template ini">' + ic('copy-plus') + '</button>' +
+        '<button class="btn btn-sm btn-ghost btn-icon" data-del="' + p.kode + '" aria-label="Hapus ' + esc(p.kode) + '" title="Hapus">' + ic('trash-2') + '</button></div></td></tr>';
+      }).join('') +
+      '</tbody></table></div><div class="tbl-foot"><span>' + ic('grip-vertical') + ' Seret baris (atau pakai tombol ▲▼) untuk mengatur urutan tampil di form QC dan laporan.</span></div>' : kosong('Belum ada parameter', 'Tambahkan parameter uji, atau tempel parameter yang disalin dari template lain.')) +
     '<div class="card-f" style="justify-content:flex-start"><button class="btn btn-dashed" id="tp-tambah">' + ic('plus') + 'Tambah parameter</button></div></div>' +
     '<div class="sticky-bar"><span class="sp small ' + (TP.kotor ? '' : 'muted') + '">' + (TP.kotor ? ic('circle-dot') + ' <b>Perubahan belum disimpan</b>' : ic('circle-check') + ' Tersimpan') + '</span>' +
     (TP.kotor && TP.id !== 'BARU' ? '<button class="btn" id="tp-batal">Batalkan perubahan</button>' : '') +
@@ -92,6 +161,72 @@ function gambarTemplateKanan(box, el) {
     if (!(await konfirmasi('Hapus parameter ' + k + '?', 'Parameter dihapus dari template saat disimpan. Sesi final lama tetap menyimpan nilainya.', 'Hapus', true))) return;
     TP.params = TP.params.filter(p => p.kode !== k); tandai();
   }));
+  // pilih, salin, tempel, duplikat
+  const cbAll = $('#tp-semua', box);
+  if (cbAll) cbAll.addEventListener('change', () => { tampil.forEach(p => cbAll.checked ? TP.pilih.add(p.kode) : TP.pilih.delete(p.kode)); gambarTemplateKanan(box, el); });
+  $$('[data-pilih]', box).forEach(cb => cb.addEventListener('change', () => { cb.checked ? TP.pilih.add(cb.dataset.pilih) : TP.pilih.delete(cb.dataset.pilih); gambarTemplateKanan(box, el); }));
+  const bSalin = $('#tp-salin', box);
+  if (bSalin) bSalin.addEventListener('click', () => {
+    const kode = new Set(TP.pilih), tambahan = [];
+    let ulang = true;
+    while (ulang) {                                      // ikutkan parameter yang dipakai rumus terpilih
+      ulang = false;
+      TP.params.filter(p => kode.has(p.kode)).forEach(p => refParam(p).forEach(k => {
+        if (!kode.has(k) && TP.params.some(x => x.kode === k)) { kode.add(k); tambahan.push(k); ulang = true; }
+      }));
+    }
+    const list = vrUrutParam(TP.params.filter(p => kode.has(p.kode))).map(p => Object.assign({}, p));
+    KlipParam.isi(TP.meta.nama || 'template baru', list);
+    TP.pilih = new Set();
+    toast(list.length + ' parameter disalin.' + (tambahan.length ? ' Termasuk ' + tambahan.length + ' parameter yang dipakai rumusnya (' + tambahan.join(', ') + ').' : '') + ' Buka template tujuan lalu klik Tempel.', 'success');
+    gambarTemplateKanan(box, el);
+  });
+  const bDupl = $('#tp-dupl-pilih', box);
+  if (bDupl) bDupl.addEventListener('click', () => {
+    const list = vrUrutParam(TP.params.filter(p => TP.pilih.has(p.kode))).map(p => Object.assign({}, p));
+    const r = tempelParam(list); TP.pilih = new Set();
+    toast(r.jumlah + ' parameter diduplikat: ' + r.diganti.join(', '), 'success'); tandai();
+  });
+  $$('[data-dupl]', box).forEach(b => b.addEventListener('click', () => {
+    const r = tempelParam([Object.assign({}, TP.params.find(p => p.kode === b.dataset.dupl), { nama: TP.params.find(p => p.kode === b.dataset.dupl).nama + ' (salinan)' })]);
+    toast('Diduplikat sebagai ' + r.diganti.join(', ').split(' → ')[1] + '. Ubah nama dan isinya bila perlu.', 'success'); tandai();
+  }));
+  const bTempel = $('#tp-tempel', box);
+  if (bTempel) bTempel.addEventListener('click', () => {
+    const klip = KlipParam.ambil(); if (!klip) return;
+    const r = tempelParam(klip.params.map(p => Object.assign({}, p)));
+    let pesan = r.jumlah + ' parameter ditempel dari "' + klip.asal + '".';
+    if (r.diganti.length) pesan += '\nKode yang sudah ada diganti: ' + r.diganti.join(', ') + '.';
+    if (r.putus.length) pesan += '\n⚠ Rumus ' + r.putus.join(', ') + ' memakai kode yang tidak ada di template ini (baris merah).';
+    toast(pesan, r.putus.length ? 'warning' : 'success'); tandai();
+  });
+  const bKlipX = $('#tp-klip-x', box);
+  if (bKlipX) bKlipX.addEventListener('click', () => { KlipParam.kosongkan(); gambarTemplateKanan(box, el); });
+  // urutan: tombol naik/turun & seret
+  $$('[data-naik]', box).forEach(b => b.addEventListener('click', () => { const i = tampil.findIndex(p => p.kode === b.dataset.naik); if (pindahParam(b.dataset.naik, tampil[i - 1].kode, false)) { tandai(); const x = $('[data-naik="' + b.dataset.naik + '"]', box); if (x && !x.disabled) x.focus(); } }));
+  $$('[data-turun]', box).forEach(b => b.addEventListener('click', () => { const i = tampil.findIndex(p => p.kode === b.dataset.turun); if (pindahParam(b.dataset.turun, tampil[i + 1].kode, true)) { tandai(); const x = $('[data-turun="' + b.dataset.turun + '"]', box); if (x && !x.disabled) x.focus(); } }));
+  let seret = null;
+  $$('tr[data-row]', box).forEach(tr => {
+    tr.addEventListener('dragstart', e => {
+      if (e.target.closest && e.target.closest('input, button, a') && !e.target.closest('.grip')) { e.preventDefault(); return; }
+      seret = tr.dataset.row; tr.classList.add('dragging');
+      e.dataTransfer.effectAllowed = 'move'; try { e.dataTransfer.setData('text/plain', seret); } catch (x) { }
+    });
+    tr.addEventListener('dragend', () => { tr.classList.remove('dragging'); $$('tr.drop-atas, tr.drop-bawah', box).forEach(x => x.classList.remove('drop-atas', 'drop-bawah')); seret = null; });
+    tr.addEventListener('dragover', e => {
+      if (!seret || seret === tr.dataset.row) return;
+      e.preventDefault();
+      const r = tr.getBoundingClientRect(), bawah = e.clientY > r.top + r.height / 2;
+      $$('tr.drop-atas, tr.drop-bawah', box).forEach(x => x.classList.remove('drop-atas', 'drop-bawah'));
+      tr.classList.add(bawah ? 'drop-bawah' : 'drop-atas');
+    });
+    tr.addEventListener('drop', e => {
+      if (!seret) return;
+      e.preventDefault();
+      const bawah = tr.classList.contains('drop-bawah');
+      if (pindahParam(seret, tr.dataset.row, bawah)) tandai(); else gambarTemplateKanan(box, el);
+    });
+  });
   const bt = $('#tp-batal', box);
   if (bt) bt.addEventListener('click', () => { pilihTemplate(TP.id); Halaman.template.render(el); });
   $('#tp-simpan', box).addEventListener('click', async e => {
@@ -106,6 +241,16 @@ function gambarTemplateKanan(box, el) {
     await segarkanBoot(true);
     pilihTemplate(r.data.template_id); rute();
   });
+}
+
+function toolbarParam() {
+  const n = TP.pilih.size, klip = KlipParam.ambil();
+  if (!n && !klip) return '<div class="tb-param"><span class="small muted">' + ic('info') + ' Centang parameter untuk menyalin atau menduplikatnya.</span></div>';
+  return '<div class="tb-param">' +
+    (n ? '<span class="small"><b>' + n + '</b> dipilih</span><button class="btn btn-sm" id="tp-salin">' + ic('clipboard-copy') + 'Salin ke papan klip</button><button class="btn btn-sm" id="tp-dupl-pilih">' + ic('copy-plus') + 'Duplikat di sini</button>' : '') +
+    (klip ? '<span class="sp"></span><span class="klip">' + ic('clipboard-paste') + '<span>Papan klip: <b>' + klip.params.length + ' parameter</b> dari "' + esc(klip.asal) + '"</span>' +
+      '<button class="btn btn-sm btn-primary" id="tp-tempel">' + ic('clipboard-paste') + 'Tempel di sini</button><button class="btn btn-sm btn-ghost btn-icon" id="tp-klip-x" title="Kosongkan papan klip" aria-label="Kosongkan papan klip">' + ic('x') + '</button></span>' : '') +
+    '</div>';
 }
 
 function validasiParamLokal(p, kode) {
@@ -138,8 +283,7 @@ function editorParam(p, selesai) {
       '<div class="field span-2"><label for="e-nama">Nama parameter <span class="req">*</span></label><input class="input" id="e-nama" value="' + esc(d.nama) + '"></div>' +
       '<div class="field"><label for="e-sat">Satuan</label><input class="input mono" id="e-sat" value="' + esc(d.satuan) + '" placeholder="lux, %, mm, HU…"></div>' +
       '<div class="field"><label for="e-tin">Tipe input</label><select class="input" id="e-tin">' + Object.keys(VR_TIPE_INPUT).map(k => '<option value="' + k + '"' + (k === d.tipe_input ? ' selected' : '') + '>' + VR_TIPE_INPUT[k] + '</option>').join('') + '</select></div>' +
-      '<div class="field"><label for="e-dec">Desimal tampilan</label><input class="input mono" id="e-dec" type="number" min="0" max="6" value="' + esc(d.desimal) + '"><span class="hint">Nilai dibulatkan half-up sebelum dinilai.</span></div>' +
-      '<div class="field"><label for="e-urut">Urutan</label><input class="input mono" id="e-urut" type="number" value="' + esc(d.urutan) + '"></div>' +
+      '<div class="field span-2"><label for="e-dec">Desimal tampilan</label><input class="input mono" id="e-dec" type="number" min="0" max="6" value="' + esc(d.desimal) + '"><span class="hint">Nilai dibulatkan half-up sebelum dinilai.</span></div>' +
       '<div class="field span-2" id="w-rumus"><label for="e-rumus">Rumus</label><input class="input mono" id="e-rumus" value="' + esc(d.formula) + '" placeholder="mis. avg(IL_Q1, IL_Q2, IL_Q3, IL_Q4) - IL_LATAR">' +
       '<span class="hint">Fungsi: avg, sum, min, max, abs, sqrt, pow, round(x,d), atan, deg. Klik kode untuk menyisipkan:</span><div class="hstack" style="gap:4px">' + kodeLain.map(k => '<button type="button" class="chip" style="height:24px;font-family:var(--mono);font-size:11px" data-ins="' + k + '">' + k + '</button>').join('') + '</div></div>' +
       '<div class="field" id="w-opsi"><label for="e-opsi">Pilihan (pisahkan dengan |)</label><input class="input" id="e-opsi" value="' + esc(d.opsi) + '"></div>' +
@@ -158,14 +302,16 @@ function editorParam(p, selesai) {
       if (kodeLain.indexOf(n.kode) > -1) { toast('Kode ' + n.kode + ' sudah dipakai.', 'warning'); return false; }
       const msg = validasiParamLokal(n, kodeLain.concat([n.kode]));
       if (msg) { toast(msg, 'warning'); return false; }
+      if (baru || n.kategori !== p.kategori) n.urutan = String(1e6);   // taruh di akhir kategorinya; atur ulang dengan seret
       if (baru) TP.params.push(n); else Object.assign(p, n);
+      nomoriUlang();
       selesai();
     } }]
   });
   function baca(bg) {
     return Object.assign({}, d, {
       kategori: $('#e-kat', bg).value, kelompok: $('#e-kel', bg).value.trim(), kode: $('#e-kode', bg).value.trim().toUpperCase(), nama: $('#e-nama', bg).value.trim(),
-      satuan: $('#e-sat', bg).value.trim(), tipe_input: $('#e-tin', bg).value, desimal: $('#e-dec', bg).value || '2', urutan: $('#e-urut', bg).value || '0',
+      satuan: $('#e-sat', bg).value.trim(), tipe_input: $('#e-tin', bg).value, desimal: $('#e-dec', bg).value || '2',
       formula: $('#e-rumus', bg).value.trim(), opsi: $('#e-opsi', bg).value.split('|').map(x => x.trim()).filter(Boolean).join('|'), tipe_toleransi: $('#e-tol', bg).value,
       batas_min: $('#e-min', bg).value.trim(), batas_maks: $('#e-maks', bg).value.trim(), acuan: $('#e-acuan', bg).value || '',
       keterangan: $('#e-ket', bg).value.trim(), wajib: $('#e-wajib', bg).checked ? 'TRUE' : 'FALSE', boleh_na: $('#e-na', bg).checked ? 'TRUE' : 'FALSE', aktif: $('#e-aktif', bg).checked ? 'TRUE' : 'FALSE'

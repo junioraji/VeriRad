@@ -4,7 +4,7 @@
  * ===================================================================== */
 'use strict';
 
-const LP = { rs: '', periode: '', grafik: true, penerima: null, cc: null, subjek: '', pesan: '', rsEmail: '' };
+const LP = { rs: '', periode: '', bahasa: '', grafik: true, penerima: null, cc: null, subjek: '', pesan: '', rsEmail: '' };
 
 daftarHalaman('laporan', {
   judul: 'Laporan',
@@ -14,22 +14,29 @@ daftarHalaman('laporan', {
     if (!rsList.length) { el.innerHTML = kosong('Belum ada rumah sakit', 'Tambahkan rumah sakit terlebih dahulu.', '<a class="btn btn-primary" href="#/kelola">Kelola RS & Alat</a>'); return; }
     if (!LP.rs || !getRs(LP.rs)) LP.rs = (AppState.filterRs && getRs(AppState.filterRs)) ? AppState.filterRs : rsList[0].rs_id;
     if (!LP.periode) LP.periode = AppState.periode;
-    const rs = getRs(LP.rs);
+    if (!LP.bahasa) LP.bahasa = I18N.lang;
+    const rs = getRs(LP.rs), en = LP.bahasa === 'en';
     if (LP.rsEmail !== LP.rs) { LP.penerima = vrDaftarEmail(rs.email_atasan); LP.cc = vrDaftarEmail(rs.email_cc); LP.rsEmail = LP.rs; LP.subjek = ''; LP.pesan = ''; }
-    const subjekBawaan = '[VeriRad] Laporan QC Radiologi ' + rs.nama + ' — ' + vrNamaPeriode(LP.periode);
-    const pesanBawaan = 'Yth. ' + (rs.nama_penandatangan || 'Bapak/Ibu Kepala Instalasi Radiologi') + ',\n\nBersama ini kami sampaikan laporan quality control bulanan alat radiologi ' + rs.nama + ' periode ' + vrNamaPeriode(LP.periode) + '. Laporan lengkap terlampir dalam bentuk PDF.\n\nHormat kami,\n' + (AppState.pengaturan.nama_fismed || AppState.me.nama || '');
+    const namaFismed = AppState.pengaturan.nama_fismed || AppState.me.nama || '';
+    const subjekBawaan = en ? '[VeriRad] Radiology QC Report ' + rs.nama + ' — ' + vrNamaPeriode(LP.periode, 'en')
+      : '[VeriRad] Laporan QC Radiologi ' + rs.nama + ' — ' + vrNamaPeriode(LP.periode);
+    const pesanBawaan = en ? 'Dear ' + (rs.nama_penandatangan || 'Head of Radiology Department') + ',\n\nPlease find attached the monthly quality control report for the radiology equipment at ' + rs.nama + ' for ' + vrNamaPeriode(LP.periode, 'en') + '. The full report is attached as a PDF.\n\nKind regards,\n' + namaFismed
+      : 'Yth. ' + (rs.nama_penandatangan || 'Bapak/Ibu Kepala Instalasi Radiologi') + ',\n\nBersama ini kami sampaikan laporan quality control bulanan alat radiologi ' + rs.nama + ' periode ' + vrNamaPeriode(LP.periode) + '. Laporan lengkap terlampir dalam bentuk PDF.\n\nHormat kami,\n' + (AppState.pengaturan.nama_fismed || AppState.me.nama || '');
     const alat = alatAktif(LP.rs);
     const final = alat.filter(a => { const s = sesiAlat(a.alat_id, LP.periode); return s && s.status_sesi === 'FINAL'; });
     const gagal = final.filter(a => sesiAlat(a.alat_id, LP.periode).status_total === 'GAGAL');
-    const profilKurang = !AppState.pengaturan.nama_fismed || !AppState.pengaturan.ttd_file_id;
+    const profilKurang = !AppState.pengaturan.nama_fismed || !AppState.pengaturan.ttd_file_id || !(rs.no_izin_fismed || AppState.pengaturan.no_izin);
     el.innerHTML = '<div class="page-h"><div><h1>Laporan Quality Control Bulanan</h1><p>Pratinjau di bawah sama persis dengan PDF yang dibuat server.</p></div>' +
       '<div class="act"><button class="btn" id="lp-csv">' + ic('download') + 'Ekspor CSV</button><button class="btn" id="lp-cetak">' + ic('printer') + 'Cetak</button></div></div>' +
-      (profilKurang ? '<div class="banner banner-warn">' + ic('triangle-alert') + '<div class="t small">Profil fisikawan medis atau tanda tangan belum lengkap, sehingga blok tanda tangan di PDF masih kosong.</div><a class="btn btn-sm" href="#/pengaturan">Lengkapi</a></div>' : '') +
+      (profilKurang ? '<div class="banner banner-warn">' + ic('triangle-alert') + '<div class="t small">Nama, tanda tangan, atau nomor izin (SIP) untuk RS ini belum lengkap, sehingga blok tanda tangan di PDF belum lengkap.</div><a class="btn btn-sm" href="#/pengaturan">Lengkapi</a></div>' : '') +
       '<div class="row r-1-2"><div class="stack">' +
       '<div class="card"><div class="card-h"><h2>' + ic('sliders-horizontal') + 'Konfigurasi laporan</h2></div><div class="card-b stack">' +
       '<div class="field"><label for="lp-rs">Rumah sakit</label><select class="input" id="lp-rs">' + rsList.map(r => '<option value="' + r.rs_id + '"' + (r.rs_id === LP.rs ? ' selected' : '') + '>' + esc(r.nama) + '</option>').join('') + '</select></div>' +
       '<div class="field"><label for="lp-per">Periode</label><select class="input" id="lp-per">' + daftarPeriode().map(p => '<option value="' + p + '"' + (p === LP.periode ? ' selected' : '') + '>' + esc(vrNamaPeriode(p)) + '</option>').join('') + '</select></div>' +
-      '<label class="check"><input type="checkbox" id="lp-grafik"' + (LP.grafik ? ' checked' : '') + '><span>Sertakan grafik tren<span class="hint" style="display:block">Kelulusan 6 bulan dan tren setiap parameter yang gagal.</span></span></label>' +
+      '<div class="field"><span class="lbl" id="lp-bhs-l">Bahasa laporan</span><div class="seg seg-sm" role="group" aria-labelledby="lp-bhs-l" id="lp-bhs">' +
+      [['id', 'Bahasa Indonesia'], ['en', 'English']].map(b => '<button type="button" data-bhs="' + b[0] + '" aria-pressed="' + (LP.bahasa === b[0]) + '"' + '><span data-no-i18n>' + b[1] + '</span></button>').join('') +
+      '</div><span class="hint">PDF, judul grafik, subjek, dan pesan email mengikuti bahasa ini.</span></div>' +
+      '<label class="check"><input type="checkbox" id="lp-grafik"' + (LP.grafik ? ' checked' : '') + '><span>Sertakan grafik<span class="hint" style="display:block">Kelulusan 6 bulan, linearitas CT number, dan tren setiap parameter yang gagal.</span></span></label>' +
       '<div class="banner ' + (final.length === alat.length ? 'banner-info' : 'banner-warn') + ' small">' + ic(final.length === alat.length ? 'circle-check' : 'clock') + '<div class="t"><b>' + final.length + ' dari ' + alat.length + ' alat sudah final.</b> ' +
       (final.length < alat.length ? 'Alat lain tercantum "belum diuji" atau "draf".' : 'Laporan siap dikirim.') + (gagal.length ? ' <b style="color:var(--fail)">' + gagal.length + ' alat gagal.</b>' : '') + '</div></div>' +
       '</div></div>' +
@@ -46,6 +53,7 @@ daftarHalaman('laporan', {
     emailChips($('#lp-cc', el), LP.cc, v => { LP.cc = v; });
     $('#lp-rs', el).addEventListener('change', e => { LP.rs = e.target.value; Halaman.laporan.render(el); });
     $('#lp-per', el).addEventListener('change', e => { LP.periode = e.target.value; LP.subjek = ''; LP.pesan = ''; Halaman.laporan.render(el); });
+    $$('[data-bhs]', el).forEach(b => b.addEventListener('click', () => { if (LP.bahasa === b.dataset.bhs) return; LP.bahasa = b.dataset.bhs; LP.subjek = ''; LP.pesan = ''; Halaman.laporan.render(el); }));
     $('#lp-grafik', el).addEventListener('change', e => { LP.grafik = e.target.checked; pratinjau(el); });
     $('#lp-subjek', el).addEventListener('input', e => { LP.subjek = e.target.value; });
     $('#lp-pesan', el).addEventListener('input', e => { LP.pesan = e.target.value; });
@@ -75,7 +83,7 @@ function emailChips(box, list, onChange) {
   gambar();
 }
 
-async function dataLaporan(rs, per, grafik) {
+async function dataLaporan(rs, per, grafik, lang) {
   if (per < AppState.sesiDari && !(await muatSesiSejak(per))) return null;
   const sesi = AppState.sesi.filter(s => s.rs_id === rs.rs_id && s.periode === per);
   if (!(await muatHasil(sesi.map(s => s.sesi_id)))) return null;
@@ -84,26 +92,27 @@ async function dataLaporan(rs, per, grafik) {
   const p = AppState.pengaturan;
   return {
     rs, alat: AppState.alat, sesi, hasil, periode: per, templates: AppState.templates,
-    profil: { nama: p.nama_fismed || '', no_izin: p.no_izin || '', kota: p.kota || '' },
+    profil: { nama: p.nama_fismed || '', no_izin: rs.no_izin_fismed || p.no_izin || '', kota: rs.kota || p.kota || '' },
     logo: await dataUriBerkas(rs.logo_file_id), ttd: fismed() ? await dataUriBerkas(p.ttd_file_id) : '',
-    grafik: grafik ? await buatGrafikLaporan(rs, per, sesi) : [], tanggal: AppState.hariIni || new Date().toISOString().slice(0, 10), sep: sep()
+    grafik: grafik ? await buatGrafikLaporan(rs, per, sesi, lang) : [], tanggal: AppState.hariIni || new Date().toISOString().slice(0, 10), sep: sep(), lang: lang === 'en' ? 'en' : 'id'
   };
 }
 
 const pratinjau = debounce(async function (el) {
   const box = $('#lp-prev', el); if (!box) return;
   const rs = getRs(LP.rs);
-  const d = await dataLaporan(rs, LP.periode, LP.grafik);
+  const d = await dataLaporan(rs, LP.periode, LP.grafik, LP.bahasa);
   if (!d || !document.body.contains(box)) return;
   const f = document.createElement('iframe');
   f.title = 'Pratinjau laporan';
+  f.setAttribute('data-no-i18n', '');
   f.srcdoc = vrLaporanHtml(d).replace('<body>', '<body style="padding:14mm;max-width:210mm;margin:auto">');
   box.innerHTML = '';
   box.appendChild(f);
 }, 250);
 
-async function buatGrafikLaporan(rs, per, sesiPer) {
-  const out = [], bulan = [];
+async function buatGrafikLaporan(rs, per, sesiPer, lang) {
+  const out = [], bulan = [], T = s => trKe(lang, s), S = svg => trSvgKe(lang, svg);
   for (let i = 5; i >= 0; i--) bulan.push(vrGeserPeriode(per, -i));
   if (bulan[0] < AppState.sesiDari) await muatSesiSejak(bulan[0]);
   const ids = alatAktif(rs.rs_id).map(a => a.alat_id);
@@ -114,8 +123,22 @@ async function buatGrafikLaporan(rs, per, sesiPer) {
   });
   if (persen.some(v => v !== null)) {
     const svg = grafikGaris({ labels: bulan.map(singkatBulan), seri: [{ nama: '% lulus', warna: '#F37021', nilai: persen }], persen: true, lebar: 640, tinggi: 200, labelNilai: true, desimal: 0 });
-    const png = await svgKePng(svg, 640, 200);
-    if (png) out.push({ judul: 'Persentase parameter lulus — ' + rs.nama + ' (6 bulan)', src: png });
+    const png = await svgKePng(S(svg), 640, 200);
+    if (png) out.push({ judul: T('Persentase parameter lulus — ' + rs.nama + ' (6 bulan)'), src: png });
+  }
+  // grafik linearitas (mis. CT number) untuk tiap alat yang punya kelompok linearitas
+  for (const s of sesiPer.filter(x => x.status_sesi === 'FINAL')) {
+    const rows = AppState.hasil[s.sesi_id] || [], kel = {};
+    rows.forEach(h => { (kel[h.kelompok] = kel[h.kelompok] || []).push(h); });
+    for (const nama of Object.keys(kel)) {
+      if (!apakahKelompokLinier(nama, kel[nama])) continue;
+      const t = titikLinier(kel[nama].filter(h => h.tipe_toleransi === 'RENTANG').map(h => ({ kode: h.kode, nama: h.nama, min: h.min_terpakai, maks: h.maks_terpakai, nilai: h.nilai, status: h.status })));
+      if (t.filter(x => x.y !== null).length < 2) continue;
+      const g = grafikLinier(t, { lebar: 640, tinggi: 340, satuan: kel[nama][0].satuan });
+      const png = await svgKePng(S(g.svg), 640, 340);
+      const a = getAlat(s.alat_id) || {};
+      if (png) out.push({ judul: a.kode + ' — ' + T(nama) + (g.reg.r2 !== undefined ? ' (' + T('kemiringan') + ' ' + vrFormat(g.reg.a, 4, sep()) + ', R² = ' + vrFormat(g.reg.r2, 4, sep()) + ')' : ''), src: png });
+    }
   }
   const gagal = [];
   sesiPer.filter(s => s.status_sesi === 'FINAL').forEach(s => (AppState.hasil[s.sesi_id] || []).forEach(h => { if (h.status === 'GAGAL' && h.tipe_input !== 'KUALITATIF') gagal.push({ s, h }); }));
@@ -128,9 +151,9 @@ async function buatGrafikLaporan(rs, per, sesiPer) {
     if (g.h.min_terpakai !== '') garis.push({ y: vrAngka(g.h.min_terpakai), label: 'Batas min ' + vrAngkaRingkas(g.h.min_terpakai, sep()) });
     if (g.h.maks_terpakai !== '') garis.push({ y: g.h.tipe_toleransi === 'MUTLAK_PM' ? Math.abs(vrAngka(g.h.maks_terpakai)) : vrAngka(g.h.maks_terpakai), label: 'Batas maks ' + vrAngkaRingkas(g.h.maks_terpakai, sep()) });
     const svg = grafikGaris({ labels: bulan.map(singkatBulan), seri: [{ nama: g.h.nama, warna: '#1B2A4A', nilai, tandaGagal: st }], garis, lebar: 640, tinggi: 200, labelNilai: true, desimal: Number(g.h.desimal) });
-    const png = await svgKePng(svg, 640, 200);
+    const png = await svgKePng(S(svg), 640, 200);
     const a = getAlat(g.s.alat_id) || {};
-    if (png) out.push({ judul: a.kode + ' — ' + g.h.nama + (g.h.satuan ? ' (' + g.h.satuan + ')' : ''), src: png });
+    if (png) out.push({ judul: a.kode + ' — ' + T(g.h.nama) + (g.h.satuan ? ' (' + g.h.satuan + ')' : ''), src: png });
   }
   return out;
 }
@@ -146,8 +169,8 @@ async function buatLaporan(el, kirim, btn) {
     if (!ok) return;
   }
   setBusy(btn, true, kirim ? 'Membuat & mengirim…' : 'Membuat PDF…');
-  const grafik = LP.grafik ? await buatGrafikLaporan(rs, LP.periode, AppState.sesi.filter(s => s.rs_id === rs.rs_id && s.periode === LP.periode)) : [];
-  const r = await api('laporan.buat', { rs_id: rs.rs_id, periode: LP.periode, grafik, kirim, penerima: LP.penerima, cc: LP.cc, subjek: $('#lp-subjek', el).value, pesan: $('#lp-pesan', el).value });
+  const grafik = LP.grafik ? await buatGrafikLaporan(rs, LP.periode, AppState.sesi.filter(s => s.rs_id === rs.rs_id && s.periode === LP.periode), LP.bahasa) : [];
+  const r = await api('laporan.buat', { rs_id: rs.rs_id, periode: LP.periode, bahasa: LP.bahasa, grafik, kirim, penerima: LP.penerima, cc: LP.cc, subjek: $('#lp-subjek', el).value, pesan: $('#lp-pesan', el).value });
   setBusy(btn, false);
   if (r.data && r.data.laporan) { AppState.laporan.unshift(r.data.laporan); gambarRiwayatLaporan($('#lp-riwayat', el), true); }
   if (!r.success) return toast(r.message, 'error');

@@ -12,8 +12,8 @@ daftarHalaman('pengaturan', {
       '<div class="row r-1-1">' +
       '<div class="card"><div class="card-h"><h2>' + ic('id-card') + 'Profil fisikawan medis</h2></div><div class="card-b stack">' +
       '<div class="field"><label for="p-nama">Nama lengkap & gelar <span class="req">*</span></label><input class="input" id="p-nama" value="' + esc(p.nama_fismed || '') + '" placeholder="mis. Andi Pratama, S.Si., M.Si."></div>' +
-      '<div class="field"><label for="p-izin">Nomor izin (SIP/STR) untuk laporan</label><input class="input" id="p-izin" value="' + esc(p.no_izin || '') + '" placeholder="mis. SIP-FM 503/…"></div>' +
-      '<div class="grid-2"><div class="field"><label for="p-kota">Kota (baris tanda tangan)</label><input class="input" id="p-kota" value="' + esc(p.kota || '') + '" placeholder="mis. Bekasi"></div>' +
+      '<div class="field"><label for="p-izin">Nomor izin bawaan (STR/SIP)</label><input class="input" id="p-izin" value="' + esc(p.no_izin || '') + '" placeholder="mis. STR 1234…"><span class="hint">Dipakai bila nomor SIP untuk RS tertentu belum diisi di tabel per rumah sakit.</span></div>' +
+      '<div class="grid-2"><div class="field"><label for="p-kota">Kota bawaan</label><input class="input" id="p-kota" value="' + esc(p.kota || '') + '" placeholder="mis. Bekasi"><span class="hint">Cadangan bila kota RS belum diisi.</span></div>' +
       '<div class="field"><label for="p-sep">Pemisah desimal</label><select class="input" id="p-sep"><option value=","' + (sep() === ',' ? ' selected' : '') + '>Koma — 85,7</option><option value="."' + (sep() === '.' ? ' selected' : '') + '>Titik — 85.7</option></select></div></div>' +
       '<div class="field"><span class="lbl">Email login</span><input class="input mono" value="' + esc(AppState.me.email) + '" readonly></div>' +
       '</div><div class="card-f"><button class="btn btn-primary" id="p-simpan">' + ic('save') + 'Simpan profil</button></div></div>' +
@@ -21,8 +21,16 @@ daftarHalaman('pengaturan', {
       '<p class="small muted" style="margin:0">Gambar tanda tangan (PNG latar transparan disarankan) muncul di blok "Fisikawan Medis" pada PDF.</p>' +
       '<div class="hstack" style="gap:16px;align-items:center"><div class="logo-box xbox" id="ttd-box" style="width:220px;height:110px"><span class="small muted">Belum ada</span></div>' +
       '<label class="btn">' + ic('upload') + 'Unggah tanda tangan<input type="file" class="sr-only" id="p-ttd" accept="image/png,image/jpeg,image/webp"></label></div>' +
-      '<div class="banner banner-info small">' + ic('info') + '<div class="t">Pratinjau blok tanda tangan: <b>' + esc((p.kota ? p.kota + ', ' : '') + vrTanggalPanjang(AppState.hariIni)) + '</b> · Fisikawan Medis · <b>' + esc(p.nama_fismed || '(nama)') + '</b> · ' + esc(p.no_izin || '(nomor izin)') + '</div></div>' +
+      '<div class="banner banner-info small">' + ic('info') + '<div class="t">Nomor SIP dan kota diatur per rumah sakit di tabel bawah, karena SIP di tiap RS berbeda.</div></div>' +
       '</div></div></div>' +
+      '<div class="card"><div class="card-h"><h2>' + ic('hospital') + 'Nomor SIP & kota per rumah sakit</h2><span class="small muted">muncul di blok tanda tangan laporan RS tersebut</span></div>' +
+      (AppState.rs.length ? '<div class="tbl-wrap"><table class="tbl"><thead><tr><th>Rumah sakit</th><th style="min-width:240px">No. SIP fisikawan medis di RS ini</th><th style="min-width:180px">Kota (tanda tangan)</th><th>Pratinjau</th></tr></thead><tbody>' +
+        AppState.rs.slice().sort((a, b) => a.nama.localeCompare(b.nama)).map(r => '<tr><td><b>' + esc(r.nama) + '</b>' + (vrBenar(r.aktif) ? '' : ' <span class="badge b-na">Nonaktif</span>') + '<span class="sub">' + esc(r.alamat || '') + '</span></td>' +
+          '<td><input class="input mono" data-izin="' + r.rs_id + '" value="' + esc(r.no_izin_fismed || '') + '" placeholder="' + esc(p.no_izin ? 'kosong = ' + p.no_izin : 'mis. SIP 503/…') + '" aria-label="No. SIP di ' + esc(r.nama) + '"></td>' +
+          '<td><input class="input" data-kota="' + r.rs_id + '" value="' + esc(r.kota || '') + '" placeholder="' + esc(p.kota ? 'kosong = ' + p.kota : 'mis. Bekasi') + '" aria-label="Kota untuk ' + esc(r.nama) + '"></td>' +
+          '<td class="small" data-prev-izin="' + r.rs_id + '"></td></tr>').join('') + '</tbody></table></div>' +
+        '<div class="card-f"><button class="btn btn-primary" id="izin-simpan">' + ic('save') + 'Simpan SIP & kota</button></div>'
+        : '<div class="card-b">' + kosong('Belum ada rumah sakit', 'Tambahkan RS di menu Kelola RS & Alat, lalu isi nomor SIP per RS di sini.', '<a class="btn" href="#/kelola">Kelola RS & Alat</a>') + '</div>') + '</div>' +
       '<div class="card"><div class="card-h"><h2>' + ic('users') + 'Pengguna & hak akses</h2><button class="btn btn-primary btn-sm" id="u-baru">' + ic('user-plus') + 'Tautkan atasan</button></div>' +
       '<div class="tbl-wrap"><table class="tbl"><thead><tr><th>Nama</th><th>Email Google</th><th>Peran</th><th>Rumah sakit yang bisa dilihat</th><th class="c">Status</th><th></th></tr></thead><tbody>' +
       AppState.pengguna.slice().sort((a, b) => (a.peran > b.peran ? -1 : 1)).map(u => '<tr><td><b>' + esc(u.nama || '—') + '</b><span class="sub">' + esc(u.jabatan || '') + '</span></td><td class="m">' + esc(u.email) + '</td>' +
@@ -60,6 +68,21 @@ daftarHalaman('pengaturan', {
         AppState.pengaturan.ttd_file_id = r.data.file_id; AppState.berkas[r.data.file_id] = b.dataUri;
         toast('Tanda tangan tersimpan.', 'success'); rute();
       } catch (er) { toast(er.message, 'error'); }
+    });
+    const prevIzin = () => $$('[data-prev-izin]', el).forEach(td => {
+      const id = td.dataset.prevIzin, sip = $('[data-izin="' + id + '"]', el).value.trim() || p.no_izin || '', kota = $('[data-kota="' + id + '"]', el).value.trim() || p.kota || '';
+      td.innerHTML = '<span class="muted">' + esc((kota ? kota + ', ' : '') + vrTanggalPanjang(AppState.hariIni)) + '</span><br><b>' + esc(p.nama_fismed || '(nama)') + '</b><br><span class="mono">' + esc(sip || '— belum ada SIP —') + '</span>';
+    });
+    $$('[data-izin], [data-kota]', el).forEach(i => i.addEventListener('input', prevIzin)); prevIzin();
+    const bIzin = $('#izin-simpan', el);
+    if (bIzin) bIzin.addEventListener('click', async e => {
+      const items = AppState.rs.map(r => ({ rs_id: r.rs_id, no_izin_fismed: $('[data-izin="' + r.rs_id + '"]', el).value.trim(), kota: $('[data-kota="' + r.rs_id + '"]', el).value.trim() }));
+      setBusy(e.currentTarget, true, 'Menyimpan…');
+      const r = await api('rs.izin', { items });
+      setBusy(e.currentTarget, false);
+      if (!r.success) return toast(r.message, 'error');
+      r.data.forEach(x => { const i = AppState.rs.findIndex(y => y.rs_id === x.rs_id); if (i > -1) AppState.rs[i] = x; });
+      toast(r.message, 'success');
     });
     $('#u-baru', el).addEventListener('click', () => modalPengguna(null));
     $$('[data-u]', el).forEach(b => b.addEventListener('click', () => modalPengguna(AppState.pengguna.find(u => u.email === b.dataset.u))));

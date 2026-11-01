@@ -91,7 +91,7 @@ function onSessionExpired() {
 
 /* ---------------- Tampilan login ---------------- */
 function renderLogin(pesan) {
-  document.title = 'Masuk — VeriRad';
+  document.title = tr('Masuk') + ' — VeriRad';
   const siap = konfigurasiSiap();
   const demoBoleh = !siap || /[?&]demo\b/.test(location.search);
   $('#app').innerHTML =
@@ -105,7 +105,7 @@ function renderLogin(pesan) {
     '<div><div class="ico">' + ic('file-text') + '</div><div><b>Laporan PDF sekali klik</b><span>Berkop RS, bertanda tangan, terkirim ke email atasan.</span></div></div>' +
     '</div></div>' +
     '<p class="small" style="color:#64748B">VeriRad v' + esc(VR_VERSI) + '</p></section>' +
-    '<section class="login-form"><div class="card login-card">' +
+    '<section class="login-form">' + tombolBahasa('login-lang') + '<div class="card login-card">' +
     '<h2>Masuk ke VeriRad</h2><p class="muted" style="margin:0">Gunakan akun Gmail yang terdaftar.</p>' +
     '<div id="gbtn" class="gbtn-wrap">' + (siap ? '<div class="skel" style="width:300px;height:40px"></div>' : '') + '</div>' +
     '<div id="login-msg">' + (pesan || '') + '</div>' +
@@ -184,7 +184,7 @@ function renderShell() {
     '<button class="btn btn-ghost btn-icon btn-sm" style="color:#94A3B8" id="btn-keluar" title="Keluar" aria-label="Keluar">' + ic('log-out') + '</button></div></div></aside>' +
     '<div class="main"><header class="topbar"><button class="btn btn-ghost btn-icon burger" id="burger" aria-label="Buka menu">' + ic('menu') + '</button>' +
     '<div class="crumb"><span class="hide-sm">VeriRad</span><span class="hide-sm">' + ic('chevron-right') + '</span><b id="crumb-t"></b></div><div class="sp"></div>' +
-    '<label class="sr-only" for="sel-periode">Periode</label><select class="input" id="sel-periode" title="Periode QC">' +
+    tombolBahasa() + '<label class="sr-only" for="sel-periode">Periode</label><select class="input" id="sel-periode" title="Periode QC">' +
     daftarPeriode().map(p => '<option value="' + p + '"' + (p === AppState.periode ? ' selected' : '') + '>' + esc(vrNamaPeriode(p)) + '</option>').join('') + '</select>' +
     '<span class="pill hide-sm" id="pill-sync"><span class="dot"></span><span id="pill-t">Tersambung</span></span>' +
     '<button class="btn btn-ghost btn-icon" id="btn-segar" title="Muat ulang data" aria-label="Muat ulang data">' + ic('refresh-cw') + '</button>' +
@@ -227,7 +227,7 @@ function rute() {
   const el = $('#page');
   if (!el) return;
   $('#crumb-t').textContent = def.judul;
-  document.title = def.judul + ' — VeriRad';
+  document.title = tr(def.judul) + ' — VeriRad';
   el.innerHTML = '';
   if (window.__keluarHalaman) { try { window.__keluarHalaman(); } catch (e) { } window.__keluarHalaman = null; }
   try { def.render(el, param ? decodeURIComponent(param) : ''); }

@@ -295,6 +295,86 @@ function grafikDonut(seg, atas, bawah) {
   s += '<text x="90" y="112" text-anchor="middle" style="font-size:10px;fill:#64748B;letter-spacing:.08em">' + esc(bawah) + '</text>';
   return s + '</svg>';
 }
+/* ---------------- Grafik linearitas ---------------- */
+/** Kelompok "linearitas": nama kelompok mengandung "linear" dan berisi ≥ 3 parameter bertoleransi RENTANG. */
+function apakahKelompokLinier(nama, params) {
+  return /linear/i.test(nama || '') && params.filter(p => p.tipe_toleransi === 'RENTANG').length >= 3;
+}
+/** rows: [{kode, nama, min, maks, nilai, status}] → titik dengan nominal = titik tengah rentang. */
+function titikLinier(rows) {
+  return rows.map(r => {
+    const mn = vrAngka(r.min), mk = vrAngka(r.maks);
+    if (mn === null || mk === null) return null;
+    const label = String(r.nama || r.kode).split(/\s+[—-]\s+/).pop();
+    return { label, kode: r.kode, x: (mn + mk) / 2, min: mn, maks: mk, y: r.status === 'NA' ? null : vrAngka(r.nilai), status: r.status };
+  }).filter(Boolean).sort((a, b) => a.x - b.x);
+}
+function regresiLinier(t) {
+  const d = t.filter(p => p.y !== null && isFinite(p.y));
+  const n = d.length;
+  if (n < 2) return { n };
+  const mx = d.reduce((a, p) => a + p.x, 0) / n, my = d.reduce((a, p) => a + p.y, 0) / n;
+  let sxx = 0, sxy = 0, syy = 0;
+  d.forEach(p => { sxx += (p.x - mx) * (p.x - mx); sxy += (p.x - mx) * (p.y - my); syy += (p.y - my) * (p.y - my); });
+  if (!sxx) return { n };
+  const a = sxy / sxx, b = my - a * mx;
+  const r2 = syy ? (sxy * sxy) / (sxx * syy) : 1;
+  return { n, a, b, r2 };
+}
+/** Scatter terukur vs nominal + rentang toleransi per titik + garis ideal (y = x) + garis regresi. */
+function grafikLinier(t, o) {
+  o = o || {};
+  const W = o.lebar || 640, H = o.tinggi || 340, pl = 58, pr = 20, pt = 18, pb = 44;
+  const ada = t.filter(p => p.y !== null && isFinite(p.y));
+  const nilai = [];
+  t.forEach(p => { nilai.push(p.x, p.min, p.maks); if (p.y !== null && isFinite(p.y)) nilai.push(p.y); });
+  if (!nilai.length) return { svg: '<div class="empty small">Belum ada data linearitas.</div>', reg: { n: 0 } };
+  const rg = niceRange(Math.min.apply(null, nilai), Math.max.apply(null, nilai));
+  const X = v => pl + (v - rg.min) * (W - pl - pr) / (rg.max - rg.min), Y = v => pt + (rg.max - v) * (H - pt - pb) / (rg.max - rg.min);
+  const reg = regresiLinier(t);
+  const f = v => esc(vrAngkaRingkas(Number(v.toPrecision(6)), sep()));
+  let s = '<svg viewBox="0 0 ' + W + ' ' + H + '" role="img" aria-label="' + esc(o.judul || 'Grafik linearitas') + '">';
+  for (let v = rg.min; v <= rg.max + 1e-9; v += rg.step) {
+    s += '<line x1="' + pl + '" x2="' + (W - pr) + '" y1="' + Y(v) + '" y2="' + Y(v) + '" stroke="#E3E8EF" stroke-dasharray="2 3"/>';
+    s += '<line y1="' + pt + '" y2="' + (H - pb) + '" x1="' + X(v) + '" x2="' + X(v) + '" stroke="#F1F5F9"/>';
+    s += '<text x="' + (pl - 6) + '" y="' + (Y(v) + 4) + '" text-anchor="end">' + f(v) + '</text>';
+    s += '<text x="' + X(v) + '" y="' + (H - pb + 16) + '" text-anchor="middle">' + f(v) + '</text>';
+  }
+  s += '<text x="' + ((pl + W - pr) / 2) + '" y="' + (H - 6) + '" text-anchor="middle" style="font-weight:600;fill:#1B2A4A">Nilai nominal / acuan' + (o.satuan ? ' (' + esc(o.satuan) + ')' : '') + '</text>';
+  s += '<text transform="translate(14 ' + ((pt + H - pb) / 2) + ') rotate(-90)" text-anchor="middle" style="font-weight:600;fill:#1B2A4A">Nilai terukur' + (o.satuan ? ' (' + esc(o.satuan) + ')' : '') + '</text>';
+  // garis ideal y = x
+  s += '<line x1="' + X(rg.min) + '" y1="' + Y(rg.min) + '" x2="' + X(rg.max) + '" y2="' + Y(rg.max) + '" stroke="#94A3B8" stroke-width="1.2" stroke-dasharray="5 4"/>';
+  // rentang toleransi tiap titik
+  t.forEach(p => {
+    s += '<rect x="' + (X(p.x) - 6) + '" width="12" y="' + Y(p.maks) + '" height="' + Math.max(2, Y(p.min) - Y(p.maks)) + '" rx="2" fill="#DCFCE7" stroke="#86EFAC"><title>' + esc(p.label + ': toleransi ' + vrAngkaRingkas(p.min, sep()) + ' s.d. ' + vrAngkaRingkas(p.maks, sep())) + '</title></rect>';
+  });
+  // garis regresi
+  if (reg.a !== undefined) {
+    const x0 = rg.min, x1 = rg.max;
+    const clampY = v => Math.max(rg.min, Math.min(rg.max, v));
+    const y0 = clampY(reg.a * x0 + reg.b), y1 = clampY(reg.a * x1 + reg.b);
+    const xa = reg.a ? (y0 - reg.b) / reg.a : x0, xb = reg.a ? (y1 - reg.b) / reg.a : x1;
+    s += '<line x1="' + X(xa) + '" y1="' + Y(y0) + '" x2="' + X(xb) + '" y2="' + Y(y1) + '" stroke="#F37021" stroke-width="2.5"/>';
+  }
+  // titik
+  ada.forEach((p, i) => {
+    const bad = p.status === 'GAGAL';
+    const tip = '<title>' + esc(p.label + ': terukur ' + vrAngkaRingkas(p.y, sep()) + ', nominal ' + vrAngkaRingkas(p.x, sep())) + '</title>';
+    s += bad ? '<rect x="' + (X(p.x) - 5.5) + '" y="' + (Y(p.y) - 5.5) + '" width="11" height="11" fill="#DC2626" stroke="#fff" stroke-width="1.5">' + tip + '</rect>'
+      : '<circle cx="' + X(p.x) + '" cy="' + Y(p.y) + '" r="5" fill="#1B2A4A" stroke="#fff" stroke-width="1.5">' + tip + '</circle>';
+    if (o.label) {
+      const kanan = X(p.x) < W - 140;
+      s += '<text x="' + (X(p.x) + (kanan ? 10 : -10)) + '" y="' + (Y(p.y) + (i % 2 ? 14 : -8)) + '" text-anchor="' + (kanan ? 'start' : 'end') + '" style="fill:' + (bad ? '#B91C1C' : '#1B2A4A') + ';font-weight:600">' + esc(p.label) + '</text>';
+    }
+  });
+  if (reg.a !== undefined) {
+    const teks = 'y = ' + vrFormat(reg.a, 4, sep()) + 'x ' + (reg.b < 0 ? '− ' : '+ ') + vrFormat(Math.abs(reg.b), 2, sep()) + '   R² = ' + vrFormat(reg.r2, 4, sep());
+    s += '<rect x="' + (pl + 8) + '" y="' + (pt + 4) + '" width="' + (teks.length * 6.9 + 16) + '" height="22" rx="4" fill="#fff" stroke="#E3E8EF"/>';
+    s += '<text x="' + (pl + 16) + '" y="' + (pt + 19) + '" style="fill:#C2410C;font-weight:700">' + esc(teks) + '</text>';
+  }
+  return { svg: s + '</svg>', reg };
+}
+
 /** SVG → PNG data URI (untuk disisipkan ke PDF laporan). */
 function svgKePng(svg, lebar, tinggi) {
   return new Promise(resolve => {

@@ -24,6 +24,87 @@ var VR_TIPE_TOL = {
   KUALITATIF: 'Harus sama dengan acuan'
 };
 var VR_BULAN = ['Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni', 'Juli', 'Agustus', 'September', 'Oktober', 'November', 'Desember'];
+var VR_BULAN_EN = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
+
+/* ---------------------------------------------------------------------
+ * KAMUS ISTILAH QC (Indonesia → Inggris) untuk data bawaan & laporan.
+ * Dipakai laporan PDF berbahasa Inggris dan tampilan aplikasi mode EN.
+ * Nama yang diketik pengguna sendiri tidak diterjemahkan.
+ * ------------------------------------------------------------------- */
+var VR_EN = {
+  // kategori & jenis alat
+  'Keselamatan': 'Safety', 'Mekanik': 'Mechanical', 'Kualitas Citra': 'Image Quality', 'Dosimetri': 'Dosimetry',
+  'Radiografi Umum': 'General Radiography', 'Radiografi Mobile': 'Mobile Radiography', 'CT Scan': 'CT Scanner', 'Dental Panoramik': 'Dental Panoramic',
+  // kelompok
+  'Ruangan': 'Room safety', 'Iluminasi': 'Light-field illuminance', 'Kolimasi': 'Collimation', 'Ketegaklurusan Berkas': 'Beam perpendicularity',
+  'Fungsional': 'Functional checks', 'Generator': 'Generator', 'Keluaran': 'Tube output', 'Kualitas Berkas': 'Beam quality',
+  'Laser Penanda': 'Positioning lasers', 'Posisi Meja': 'Table positioning', 'Akurasi CT Number': 'CT number accuracy',
+  'Keseragaman Noise': 'Noise uniformity', 'Keseragaman CT Number': 'CT number uniformity', 'Linearitas CT Number': 'CT number linearity',
+  'Geometri': 'Geometric accuracy', 'Artefak': 'Artefacts', 'Umum': 'General',
+  // parameter bawaan
+  'Fungsi lampu indikator radiasi': 'Radiation warning light function',
+  'Kondisi penanda peringatan radiasi': 'Radiation warning sign condition',
+  'Fungsi audio visual': 'Audio-visual communication system',
+  'Iluminasi kuadran I': 'Illuminance, quadrant I', 'Iluminasi kuadran II': 'Illuminance, quadrant II',
+  'Iluminasi kuadran III': 'Illuminance, quadrant III', 'Iluminasi kuadran IV': 'Illuminance, quadrant IV',
+  'Cahaya latar (ambien)': 'Ambient (background) light', 'Rata-rata iluminasi 4 kuadran': 'Mean illuminance of 4 quadrants',
+  'Selisih iluminasi (rata-rata − latar)': 'Net illuminance (mean − ambient)',
+  'Pergeseran kolimasi X1': 'Light/radiation field misalignment X1', 'Pergeseran kolimasi X2': 'Light/radiation field misalignment X2',
+  'Pergeseran kolimasi Y1': 'Light/radiation field misalignment Y1', 'Pergeseran kolimasi Y2': 'Light/radiation field misalignment Y2',
+  'Deviasi kolimasi sumbu X (|X1|+|X2|)': 'Collimation deviation, X axis (|X1|+|X2|)',
+  'Deviasi kolimasi sumbu Y (|Y1|+|Y2|)': 'Collimation deviation, Y axis (|Y1|+|Y2|)',
+  'Deviasi kolimasi total (X + Y)': 'Total collimation deviation (X + Y)',
+  'Pergeseran pusat berkas (jarak)': 'Central beam offset (distance)', 'Kemiringan berkas (sudut)': 'Beam tilt (angle)',
+  'Fungsional pergeseran tabung': 'Tube movement and locks', 'Fungsional bukaan kolimasi': 'Collimator aperture operation',
+  'Akurasi tegangan (kV)': 'Tube voltage (kVp) accuracy', 'Linearitas keluaran (CL)': 'Output linearity (CL)',
+  'Reproduksibilitas keluaran (CV)': 'Output reproducibility (CV)', 'Kualitas berkas (HVL)': 'Beam quality (HVL)',
+  'Tebal slice minimum alat': 'Minimum slice thickness', 'Deviasi laser penanda': 'Positioning laser deviation',
+  'Selisih posisi meja vs indikator (SD)': 'Table position vs indicator deviation (SD)', 'Fungsional tombol': 'Control panel buttons',
+  'Akurasi CT number air (mean ROI pusat)': 'CT number accuracy, water (central ROI mean)',
+  'SD ROI pusat': 'Central ROI SD', 'SD ROI jam 12': 'ROI SD at 12 o’clock', 'SD ROI jam 3': 'ROI SD at 3 o’clock',
+  'SD ROI jam 6': 'ROI SD at 6 o’clock', 'SD ROI jam 9': 'ROI SD at 9 o’clock',
+  'Keseragaman noise (SD maks − SD min)': 'Noise uniformity (SD max − SD min)',
+  'Mean ROI pusat': 'Central ROI mean', 'Mean ROI jam 12': 'ROI mean at 12 o’clock', 'Mean ROI jam 3': 'ROI mean at 3 o’clock',
+  'Mean ROI jam 6': 'ROI mean at 6 o’clock', 'Mean ROI jam 9': 'ROI mean at 9 o’clock',
+  'Keseragaman CT pusat–tepi (selisih terbesar)': 'CT number uniformity, centre–periphery (largest difference)',
+  'Linearitas CT number — Akrilik besar': 'CT number linearity — large acrylic', 'Linearitas CT number — Akrilik kecil': 'CT number linearity — small acrylic',
+  'Linearitas CT number — Leksan': 'CT number linearity — Lexan', 'Linearitas CT number — Nilon': 'CT number linearity — nylon',
+  'Linearitas CT number — Polietilen': 'CT number linearity — polyethylene', 'Linearitas CT number — Teflon': 'CT number linearity — Teflon',
+  'Linearitas CT number — Air': 'CT number linearity — water',
+  'Akrilik besar': 'Large acrylic', 'Akrilik kecil': 'Small acrylic', 'Leksan': 'Lexan', 'Nilon': 'Nylon', 'Polietilen': 'Polyethylene', 'Teflon': 'Teflon', 'Air': 'Water',
+  'Diameter terukur pada akrilik besar': 'Measured diameter of large acrylic insert',
+  'Deviasi geometri (terukur − 50 mm)': 'Geometric deviation (measured − 50 mm)', 'Artefak citra': 'Image artefacts',
+  'Kolimasi — panjang': 'Collimation — length', 'Kolimasi — lebar': 'Collimation — width',
+  // pilihan kualitatif
+  'Berfungsi': 'Functional', 'Tidak Berfungsi': 'Not functional', 'Baik': 'Good', 'Rusak / Tidak Ada': 'Damaged / missing',
+  'Tidak ada artefak': 'No artefacts', 'Ada artefak': 'Artefacts present',
+  // catatan bawaan
+  '⚠ Dokumen lain memakai "> 100 lux". Ganti tipe ke "Lebih dari" bila itu acuan Anda (Lampiran B no. 6).': '⚠ Another reference uses "> 100 lux". Change the type to "Greater than" if that is your reference (Appendix B no. 6).',
+  '⚠ Tabel lain memakai ΔX ≤ 2 cm (setara 2% pada SID 100 cm) — Lampiran B no. 5.': '⚠ Another table uses ΔX ≤ 2 cm (equivalent to 2% at 100 cm SID) — Appendix B no. 5.',
+  '⚠ Tabel lain memakai ≤ 8 mm (Lampiran B no. 5).': '⚠ Another table uses ≤ 8 mm (Appendix B no. 5).',
+  '⚠ Tabel lain memakai ≤ 3° (Lampiran B no. 5).': '⚠ Another table uses ≤ 3° (Appendix B no. 5).',
+  'Batas = tebal slice minimum (diisi pada SLICE_MIN).': 'Limit = minimum slice thickness (entered in SLICE_MIN).',
+  '⚠ Tabel lain memakai akurasi ± 2 mm (Lampiran B no. 5).': '⚠ Another table uses an accuracy of ± 2 mm (Appendix B no. 5).',
+  '⚠ Laporan Des 2024 menulis 0,64 untuk selisih 0,90 (≈ dibagi √2). Bila itu rumus Anda, tambahkan "/ sqrt(2)" (Lampiran B no. 3).': '⚠ The Dec 2024 report shows 0.64 for a difference of 0.90 (≈ divided by √2). If that is your formula, append "/ sqrt(2)" (Appendix B no. 3).',
+  '⚠ Rumus dan batas perlu dikonfirmasi: laporan Des 2024 menulis 1,30; tabel lain memakai 4 HU (Lampiran B no. 4–5).': '⚠ Formula and limit need confirmation: the Dec 2024 report shows 1.30; another table uses 4 HU (Appendix B no. 4–5).',
+  '⚠ Nominal 50 mm diasumsikan dari laporan Des 2024 (Lampiran B no. 2).': '⚠ A nominal 50 mm is assumed from the Dec 2024 report (Appendix B no. 2).',
+  '⚠ Laporan Des 2024: 142 mm berstatus Lulus padahal batas ≥ 149 mm. Pastikan batasnya (Lampiran B no. 1).': '⚠ Dec 2024 report: 142 mm was marked Pass although the limit is ≥ 149 mm. Please confirm the limit (Appendix B no. 1).',
+  // laporan PDF
+  'LULUS': 'PASS', 'GAGAL': 'FAIL', 'BELUM': 'PENDING', 'TIDAK VALID': 'INVALID', 'draf': 'draft',
+  'LAPORAN QUALITY CONTROL BULANAN': 'MONTHLY QUALITY CONTROL REPORT', 'Alat Radiologi · Periode ': 'Radiology Equipment · Period ',
+  'Fisikawan medis': 'Medical physicist', 'Tanggal laporan': 'Report date', 'I. Ringkasan': 'I. Summary',
+  'Jumlah alat': 'Units', 'Lulus': 'Pass', 'Gagal': 'Fail', 'Belum/draf': 'Pending/draft', 'No': 'No',
+  'Alat': 'Equipment', 'Status Akhir': 'Final status', 'II. Rincian Hasil Pengujian': 'II. Detailed Test Results',
+  'No. seri tabung: ': 'Tube serial no.: ', 'Ruangan: ': 'Room: ', 'Tanggal uji: ': 'Test date: ',
+  'Pengujian masih berupa draf dan belum disimpan final.': 'Testing is still a draft and has not been finalised.',
+  'Belum diuji pada periode ini.': 'Not tested in this period.', 'Aspek': 'Aspect', 'Deskripsi Uji': 'Test description',
+  'Hasil': 'Result', 'Kriteria': 'Criterion', 'Status': 'Status', 'Parameter tidak diuji (N/A):': 'Parameters not tested (N/A):',
+  'Catatan fisikawan medis:': 'Medical physicist’s notes:', 'Grafik Tren': 'Charts', 'Mengetahui,': 'Acknowledged by,',
+  'Kepala Instalasi Radiologi': 'Head of Radiology Department', 'Fisikawan Medis': 'Medical Physicist',
+  'Dibuat dengan VeriRad · ': 'Generated with VeriRad · ', 'Laporan QC ': 'QC Report ', ' · Telp. ': ' · Tel. '
+};
+/** Terjemahkan istilah dikenal ke Inggris bila lang = 'en'; selain itu kembalikan apa adanya. */
+function vrTr(s, lang) { return lang === 'en' && Object.prototype.hasOwnProperty.call(VR_EN, s) ? VR_EN[s] : s; }
 
 /* ---------------------------------------------------------------------
  * ANGKA & PEMBULATAN
@@ -340,7 +421,7 @@ function vrEvaluasi(params, input, sep) {
 }
 
 /** Teks kriteria toleransi, mis. "≥ 100 lux", "125 – 165 HU", "± 4 HU", "= Berfungsi". */
-function vrTeksToleransi(p, min, maks, sep) {
+function vrTeksToleransi(p, min, maks, sep, lang) {
   var u = p.satuan ? ' ' + p.satuan : '';
   var mn = (min !== null && min !== undefined) ? vrAngkaRingkas(min, sep) : String(p.batas_min || '');
   var mk = (maks !== null && maks !== undefined) ? vrAngkaRingkas(maks, sep) : String(p.batas_maks || '');
@@ -349,9 +430,9 @@ function vrTeksToleransi(p, min, maks, sep) {
     case 'KURANG': return '< ' + mk + u;
     case 'MIN': return '≥ ' + mn + u;
     case 'LEBIH': return '> ' + mn + u;
-    case 'RENTANG': return mn + ' s.d. ' + mk + u;
+    case 'RENTANG': return mn + (lang === 'en' ? ' to ' : ' s.d. ') + mk + u;
     case 'MUTLAK_PM': return '± ' + String(mk).replace(/^-/, '') + u;
-    case 'KUALITATIF': return String(p.acuan || '');
+    case 'KUALITATIF': return vrTr(String(p.acuan || ''), lang);
     default: return '';
   }
 }
@@ -464,13 +545,13 @@ function vrInputDariHasil(hasilRows) {
 /* ---------------------------------------------------------------------
  * TANGGAL & PERIODE
  * ------------------------------------------------------------------- */
-function vrNamaPeriode(per) {
+function vrNamaPeriode(per, lang) {
   var m = String(per || '').match(/^(\d{4})-(\d{2})$/);
-  return m ? VR_BULAN[Number(m[2]) - 1] + ' ' + m[1] : String(per || '');
+  return m ? (lang === 'en' ? VR_BULAN_EN : VR_BULAN)[Number(m[2]) - 1] + ' ' + m[1] : String(per || '');
 }
-function vrTanggalPanjang(t) {
+function vrTanggalPanjang(t, lang) {
   var m = String(t || '').match(/^(\d{4})-(\d{2})-(\d{2})/);
-  return m ? Number(m[3]) + ' ' + VR_BULAN[Number(m[2]) - 1] + ' ' + m[1] : String(t || '');
+  return m ? Number(m[3]) + ' ' + (lang === 'en' ? VR_BULAN_EN : VR_BULAN)[Number(m[2]) - 1] + ' ' + m[1] : String(t || '');
 }
 function vrGeserPeriode(per, n) {
   var m = String(per).match(/^(\d{4})-(\d{2})$/);
@@ -598,7 +679,7 @@ function vrTemplateBawaan() {
  * LAPORAN BULANAN (HTML → PDF di server, pratinjau di browser)
  * o: { rs, alat:[...], sesi:[...], hasil:[...], periode, profil:{nama,no_izin,kota},
  *      logo:'data:...', ttd:'data:...', grafik:[{judul,src}], tanggal:'YYYY-MM-DD',
- *      sep:',', templates:[...] }
+ *      sep:',', templates:[...], lang:'id'|'en' }
  * ------------------------------------------------------------------- */
 function vrEsc(s) {
   return String(s === null || s === undefined ? '' : s).replace(/[&<>"']/g, function (c) {
@@ -610,10 +691,12 @@ var VR_LABEL_STATUS = { LULUS: 'LULUS', GAGAL: 'GAGAL', NA: 'N/A', BELUM: 'BELUM
 
 function vrLaporanHtml(o) {
   var sep = o.sep || ',';
+  var lang = o.lang === 'en' ? 'en' : 'id';
+  var L = function (t) { return vrTr(t, lang); };
   var rs = o.rs || {};
   var profil = o.profil || {};
   var tplNama = {};
-  (o.templates || []).forEach(function (t) { tplNama[t.template_id] = t.nama; });
+  (o.templates || []).forEach(function (t) { tplNama[t.template_id] = L(t.nama); });
   var sesiPer = {};
   (o.sesi || []).forEach(function (s) { if (s.periode === o.periode && s.rs_id === rs.rs_id) sesiPer[s.alat_id] = s; });
   var hasilPer = {};
@@ -626,7 +709,7 @@ function vrLaporanHtml(o) {
     var latar = { LULUS: '#DCFCE7', GAGAL: '#FEE2E2' }[s] || '#F1F5F9';
     var ikon = { LULUS: '&#9679;', GAGAL: '&#9632;', NA: '&#9671;' }[s] || '&#9675;';
     if (s === 'INFO' || !s) return '<span style="color:#94A3B8">–</span>';
-    return '<span style="display:inline-block;padding:1px 6px;border-radius:8px;background:' + latar + ';color:' + warna + ';font-weight:bold;font-size:8pt;white-space:nowrap">' + ikon + ' ' + (VR_LABEL_STATUS[s] || s) + '</span>';
+    return '<span style="display:inline-block;padding:1px 6px;border-radius:8px;background:' + latar + ';color:' + warna + ';font-weight:bold;font-size:8pt;white-space:nowrap">' + ikon + ' ' + L(VR_LABEL_STATUS[s] || s) + '</span>';
   }
 
   var jumlah = { LULUS: 0, GAGAL: 0, BELUM: 0, NA: 0 };
@@ -639,16 +722,16 @@ function vrLaporanHtml(o) {
       return '<td style="text-align:center">' + (v ? badge(v) : '<span style="color:#94A3B8">–</span>') + '</td>';
     }).join('');
     return '<tr><td>' + (i + 1) + '</td><td><b>' + vrEsc(a.kode) + '</b><br>' + vrEsc(a.merek + ' ' + a.tipe) + '<br><span style="color:#64748B">' + vrEsc(tplNama[a.template_id] || '') + ' · ' + vrEsc(a.ruangan) + '</span></td>' + sel +
-      '<td style="text-align:center">' + (s && s.status_sesi === 'FINAL' ? badge(stat) : badge('BELUM') + (s ? '<br><span style="font-size:7pt;color:#64748B">draf</span>' : '')) + '</td></tr>';
+      '<td style="text-align:center">' + (s && s.status_sesi === 'FINAL' ? badge(stat) : badge('BELUM') + (s ? '<br><span style="font-size:7pt;color:#64748B">' + L('draf') + '</span>' : '')) + '</td></tr>';
   }).join('');
 
   var detail = alat.map(function (a) {
     var s = sesiPer[a.alat_id];
     var kepala = '<div style="background:#0F1E3D;color:#fff;padding:6px 8px;margin-top:14px;font-weight:bold">' +
       vrEsc(a.kode) + ' — ' + vrEsc(tplNama[a.template_id] || '') + ' · ' + vrEsc(a.merek + ' ' + a.tipe) + '</div>' +
-      '<div style="padding:4px 8px;border:1px solid #E3E8EF;border-top:none;font-size:8pt;color:#334155">No. seri tabung: <b>' + vrEsc(a.no_seri_tabung) + '</b> &nbsp;·&nbsp; Ruangan: <b>' + vrEsc(a.ruangan) + '</b>' +
-      (s ? ' &nbsp;·&nbsp; Tanggal uji: <b>' + vrEsc(vrTanggalPanjang(s.tanggal)) + '</b>' : '') + '</div>';
-    if (!s || s.status_sesi !== 'FINAL') return kepala + '<p style="color:#64748B;font-style:italic;margin:6px 0">' + (s ? 'Pengujian masih berupa draf dan belum disimpan final.' : 'Belum diuji pada periode ini.') + '</p>';
+      '<div style="padding:4px 8px;border:1px solid #E3E8EF;border-top:none;font-size:8pt;color:#334155">' + L('No. seri tabung: ') + '<b>' + vrEsc(a.no_seri_tabung) + '</b> &nbsp;·&nbsp; ' + L('Ruangan: ') + '<b>' + vrEsc(a.ruangan) + '</b>' +
+      (s ? ' &nbsp;·&nbsp; ' + L('Tanggal uji: ') + '<b>' + vrEsc(vrTanggalPanjang(s.tanggal, lang)) + '</b>' : '') + '</div>';
+    if (!s || s.status_sesi !== 'FINAL') return kepala + '<p style="color:#64748B;font-style:italic;margin:6px 0">' + (s ? L('Pengujian masih berupa draf dan belum disimpan final.') : L('Belum diuji pada periode ini.')) + '</p>';
     var rows = (hasilPer[s.sesi_id] || []).slice().sort(function (x, y) {
       var kx = VR_KATEGORI.indexOf(x.kategori), ky = VR_KATEGORI.indexOf(y.kategori);
       return kx !== ky ? kx - ky : Number(x.urutan) - Number(y.urutan);
@@ -656,33 +739,33 @@ function vrLaporanHtml(o) {
     var no = 0, katSebelum = '';
     var isi = rows.map(function (h) {
       var data = h.tipe_toleransi === 'TIDAK_ADA';
-      var nilai = h.status === 'NA' ? 'N/A' : (h.tipe_input === 'KUALITATIF' ? vrEsc(h.nilai) : (h.nilai === '' ? '' : vrFormat(h.nilai, h.desimal, sep) + (h.satuan ? ' ' + vrEsc(h.satuan) : '')));
+      var nilai = h.status === 'NA' ? 'N/A' : (h.tipe_input === 'KUALITATIF' ? vrEsc(L(h.nilai)) : (h.nilai === '' ? '' : vrFormat(h.nilai, h.desimal, sep) + (h.satuan ? ' ' + vrEsc(h.satuan) : '')));
       var krit = vrEsc(vrTeksToleransi(h, h.min_terpakai === '' || h.min_terpakai === undefined ? null : vrAngka(h.min_terpakai),
-        h.maks_terpakai === '' || h.maks_terpakai === undefined ? null : vrAngka(h.maks_terpakai), sep));
-      var katSel = h.kategori !== katSebelum ? vrEsc(h.kategori) : '';
+        h.maks_terpakai === '' || h.maks_terpakai === undefined ? null : vrAngka(h.maks_terpakai), sep, lang));
+      var katSel = h.kategori !== katSebelum ? vrEsc(L(h.kategori)) : '';
       katSebelum = h.kategori;
       if (!data) no++;
       return '<tr style="' + (data ? 'color:#64748B;font-size:7.5pt' : '') + (h.status === 'GAGAL' ? 'background:#FEF2F2' : '') + '">' +
         '<td style="text-align:center">' + (data ? '' : no) + '</td><td>' + katSel + '</td>' +
-        '<td>' + (data ? '&nbsp;&nbsp;' : '') + vrEsc(h.nama) + (h.kelompok && !data ? '<br><span style="color:#64748B;font-size:7pt">' + vrEsc(h.kelompok) + '</span>' : '') + '</td>' +
+        '<td>' + (data ? '&nbsp;&nbsp;' : '') + vrEsc(L(h.nama)) + (h.kelompok && !data ? '<br><span style="color:#64748B;font-size:7pt">' + vrEsc(L(h.kelompok)) + '</span>' : '') + '</td>' +
         '<td style="text-align:right;font-family:Courier New,monospace">' + nilai + '</td>' +
         '<td style="text-align:center;font-family:Courier New,monospace">' + krit + '</td>' +
         '<td style="text-align:center">' + (data ? '' : badge(h.status)) + '</td></tr>';
     }).join('');
     var na = rows.filter(function (h) { return h.status === 'NA' && h.tipe_toleransi !== 'TIDAK_ADA'; });
-    var naHtml = na.length ? '<p style="font-size:8pt;margin:4px 0"><b>Parameter tidak diuji (N/A):</b> ' + na.map(function (h) { return vrEsc(h.nama) + ' — ' + vrEsc(h.alasan_na); }).join('; ') + '</p>' : '';
-    var cat = s.catatan ? '<p style="font-size:8pt;margin:4px 0;padding:6px;border-left:3px solid #F37021;background:#FFF7F0"><b>Catatan fisikawan medis:</b> ' + vrEsc(s.catatan) + '</p>' : '';
-    return kepala + '<table class="t"><thead><tr><th style="width:24px">No</th><th style="width:70px">Aspek</th><th>Deskripsi Uji</th><th style="width:80px">Hasil</th><th style="width:90px">Kriteria</th><th style="width:62px">Status</th></tr></thead><tbody>' + isi + '</tbody></table>' + naHtml + cat;
+    var naHtml = na.length ? '<p style="font-size:8pt;margin:4px 0"><b>' + L('Parameter tidak diuji (N/A):') + '</b> ' + na.map(function (h) { return vrEsc(L(h.nama)) + ' — ' + vrEsc(h.alasan_na); }).join('; ') + '</p>' : '';
+    var cat = s.catatan ? '<p style="font-size:8pt;margin:4px 0;padding:6px;border-left:3px solid #F37021;background:#FFF7F0"><b>' + L('Catatan fisikawan medis:') + '</b> ' + vrEsc(s.catatan) + '</p>' : '';
+    return kepala + '<table class="t"><thead><tr><th style="width:24px">' + L('No') + '</th><th style="width:70px">' + L('Aspek') + '</th><th>' + L('Deskripsi Uji') + '</th><th style="width:80px">' + L('Hasil') + '</th><th style="width:90px">' + L('Kriteria') + '</th><th style="width:62px">' + L('Status') + '</th></tr></thead><tbody>' + isi + '</tbody></table>' + naHtml + cat;
   }).join('');
 
-  var grafik = (o.grafik || []).length ? '<h3 style="font-size:10pt;margin:16px 0 6px;color:#0F1E3D">Grafik Tren</h3>' + o.grafik.map(function (g) {
+  var grafik = (o.grafik || []).length ? '<h3 style="font-size:10pt;margin:16px 0 6px;color:#0F1E3D">' + L('Grafik Tren') + '</h3>' + o.grafik.map(function (g) {
     return '<div style="margin:6px 0;page-break-inside:avoid"><div style="font-size:8pt;font-weight:bold;color:#1B2A4A">' + vrEsc(g.judul) + '</div><img src="' + g.src + '" style="width:100%;max-width:640px;border:1px solid #E3E8EF"></div>';
   }).join('') : '';
 
   var kop = '<table style="width:100%;border-collapse:collapse"><tr>' +
     '<td style="width:70px;vertical-align:middle">' + (o.logo ? '<img src="' + o.logo + '" style="width:60px;height:60px;object-fit:contain">' : '') + '</td>' +
     '<td style="text-align:center;vertical-align:middle"><div style="font-size:14pt;font-weight:bold;color:#0F1E3D">' + vrEsc(rs.nama) + '</div>' +
-    '<div style="font-size:9pt;color:#334155">' + vrEsc(rs.alamat) + (rs.telepon ? ' · Telp. ' + vrEsc(rs.telepon) : '') + '</div></td>' +
+    '<div style="font-size:9pt;color:#334155">' + vrEsc(rs.alamat) + (rs.telepon ? L(' · Telp. ') + vrEsc(rs.telepon) : '') + '</div></td>' +
     '<td style="width:70px"></td></tr></table><div style="border-bottom:2px solid #0F1E3D;margin:6px 0 1px"></div><div style="border-bottom:1px solid #F37021;margin-bottom:10px"></div>';
 
   var css = '<style>@page{size:A4;margin:14mm}body{font-family:Arial,Helvetica,sans-serif;font-size:9pt;color:#0F172A;margin:0}' +
@@ -690,27 +773,27 @@ function vrLaporanHtml(o) {
     'table.t td{padding:3px 4px;border:1px solid #E3E8EF;vertical-align:top;font-size:8pt}</style>';
 
   var ringkas = '<table style="width:100%;border-collapse:collapse;margin:8px 0"><tr>' +
-    [['Jumlah alat', alat.length, '#1B2A4A'], ['Lulus', jumlah.LULUS || 0, '#15803D'], ['Gagal', jumlah.GAGAL || 0, '#B91C1C'], ['Belum/draf', jumlah.BELUM || 0, '#475569'], ['N/A', jumlah.NA || 0, '#64748B']]
+    [[L('Jumlah alat'), alat.length, '#1B2A4A'], [L('Lulus'), jumlah.LULUS || 0, '#15803D'], [L('Gagal'), jumlah.GAGAL || 0, '#B91C1C'], [L('Belum/draf'), jumlah.BELUM || 0, '#475569'], ['N/A', jumlah.NA || 0, '#64748B']]
       .map(function (k) { return '<td style="border:1px solid #E3E8EF;padding:6px;text-align:center"><div style="font-size:7pt;color:#64748B;text-transform:uppercase">' + k[0] + '</div><div style="font-size:16pt;font-weight:bold;color:' + k[2] + '">' + k[1] + '</div></td>'; }).join('') +
     '</tr></table>';
 
   var ttd = '<table style="width:100%;margin-top:24px;page-break-inside:avoid;border-collapse:collapse"><tr>' +
-    '<td style="width:50%;text-align:center;vertical-align:top">Mengetahui,<br>' + vrEsc(rs.jabatan_penandatangan || 'Kepala Instalasi Radiologi') + '<div style="height:64px"></div>' +
+    '<td style="width:50%;text-align:center;vertical-align:top">' + L('Mengetahui,') + '<br>' + vrEsc(L(rs.jabatan_penandatangan || 'Kepala Instalasi Radiologi')) + '<div style="height:64px"></div>' +
     '<b><u>' + vrEsc(rs.nama_penandatangan || '..............................') + '</u></b><br>' + (rs.nip_penandatangan ? 'NIP. ' + vrEsc(rs.nip_penandatangan) : '') + '</td>' +
-    '<td style="width:50%;text-align:center;vertical-align:top">' + vrEsc((profil.kota ? profil.kota + ', ' : '') + vrTanggalPanjang(o.tanggal)) + '<br>Fisikawan Medis' +
+    '<td style="width:50%;text-align:center;vertical-align:top">' + vrEsc((profil.kota ? profil.kota + ', ' : '') + vrTanggalPanjang(o.tanggal, lang)) + '<br>' + L('Fisikawan Medis') +
     (o.ttd ? '<div style="height:64px"><img src="' + o.ttd + '" style="height:60px"></div>' : '<div style="height:64px"></div>') +
     '<b><u>' + vrEsc(profil.nama || '') + '</u></b><br>' + vrEsc(profil.no_izin || '') + '</td></tr></table>';
 
-  return '<!DOCTYPE html><html><head><meta charset="utf-8"><title>Laporan QC ' + vrEsc(rs.nama) + ' ' + vrEsc(vrNamaPeriode(o.periode)) + '</title>' + css + '</head><body>' +
+  return '<!DOCTYPE html><html lang="' + lang + '"><head><meta charset="utf-8"><title>' + L('Laporan QC ') + vrEsc(rs.nama) + ' ' + vrEsc(vrNamaPeriode(o.periode, lang)) + '</title>' + css + '</head><body>' +
     kop +
-    '<div style="text-align:center;font-size:12pt;font-weight:bold;color:#0F1E3D">LAPORAN QUALITY CONTROL BULANAN</div>' +
-    '<div style="text-align:center;font-size:10pt;margin-bottom:8px">Alat Radiologi · Periode ' + vrEsc(vrNamaPeriode(o.periode)) + '</div>' +
-    '<table class="t" style="margin-bottom:6px"><tr><td style="width:25%;background:#F8FAFC">Fisikawan medis</td><td>' + vrEsc(profil.nama || '') + (profil.no_izin ? ' (' + vrEsc(profil.no_izin) + ')' : '') + '</td>' +
-    '<td style="width:20%;background:#F8FAFC">Tanggal laporan</td><td>' + vrEsc(vrTanggalPanjang(o.tanggal)) + '</td></tr></table>' +
-    '<h3 style="font-size:10pt;margin:10px 0 4px;color:#0F1E3D">I. Ringkasan</h3>' + ringkas +
-    '<table class="t"><thead><tr><th style="width:20px">No</th><th>Alat</th><th>Keselamatan</th><th>Mekanik</th><th>Kualitas Citra</th><th>Dosimetri</th><th>Status Akhir</th></tr></thead><tbody>' + barisRingkas + '</tbody></table>' +
-    '<h3 style="font-size:10pt;margin:14px 0 4px;color:#0F1E3D">II. Rincian Hasil Pengujian</h3>' + detail +
+    '<div style="text-align:center;font-size:12pt;font-weight:bold;color:#0F1E3D">' + L('LAPORAN QUALITY CONTROL BULANAN') + '</div>' +
+    '<div style="text-align:center;font-size:10pt;margin-bottom:8px">' + L('Alat Radiologi · Periode ') + vrEsc(vrNamaPeriode(o.periode, lang)) + '</div>' +
+    '<table class="t" style="margin-bottom:6px"><tr><td style="width:25%;background:#F8FAFC">' + L('Fisikawan medis') + '</td><td>' + vrEsc(profil.nama || '') + (profil.no_izin ? ' (' + vrEsc(profil.no_izin) + ')' : '') + '</td>' +
+    '<td style="width:20%;background:#F8FAFC">' + L('Tanggal laporan') + '</td><td>' + vrEsc(vrTanggalPanjang(o.tanggal, lang)) + '</td></tr></table>' +
+    '<h3 style="font-size:10pt;margin:10px 0 4px;color:#0F1E3D">' + L('I. Ringkasan') + '</h3>' + ringkas +
+    '<table class="t"><thead><tr><th style="width:20px">' + L('No') + '</th><th>' + L('Alat') + '</th>' + VR_KATEGORI.map(function (k) { return '<th>' + L(k) + '</th>'; }).join('') + '<th>' + L('Status Akhir') + '</th></tr></thead><tbody>' + barisRingkas + '</tbody></table>' +
+    '<h3 style="font-size:10pt;margin:14px 0 4px;color:#0F1E3D">' + L('II. Rincian Hasil Pengujian') + '</h3>' + detail +
     grafik + ttd +
-    '<div style="margin-top:16px;border-top:1px solid #E3E8EF;padding-top:4px;font-size:7pt;color:#94A3B8">Dibuat dengan VeriRad · ' + vrEsc(rs.nama) + ' · ' + vrEsc(vrNamaPeriode(o.periode)) + '</div>' +
+    '<div style="margin-top:16px;border-top:1px solid #E3E8EF;padding-top:4px;font-size:7pt;color:#94A3B8">' + L('Dibuat dengan VeriRad · ') + vrEsc(rs.nama) + ' · ' + vrEsc(vrNamaPeriode(o.periode, lang)) + '</div>' +
     '</body></html>';
 }

@@ -54,11 +54,11 @@ const Demo = (function () {
       t.params.forEach(p => d.params.push(Object.assign({ param_id: t.template_id + '-' + p.kode, template_id: t.template_id }, p)));
     });
     const rs = [
-      ['RS-DEMO1', 'RSHS', 'RS Harapan Sehat', 'Jl. Kesehatan No. 45, Kota Contoh', 'dr. Budi Santoso, Sp.Rad.', 'kains.demo@contoh.id'],
-      ['RS-DEMO2', 'RSMM', 'RS Mitra Medika', 'Jl. Melati Raya No. 12, Kota Contoh', 'dr. Ratna Wulandari, Sp.Rad.', 'radiologi.demo@contoh.id'],
-      ['RS-DEMO3', 'KUS', 'Klinik Utama Sentosa', 'Jl. Anggrek No. 8, Kabupaten Contoh', 'dr. Hendra Wijaya, Sp.Rad.', 'direktur.demo@contoh.id']];
+      ['RS-DEMO1', 'RSHS', 'RS Harapan Sehat', 'Jl. Kesehatan No. 45, Kota Contoh', 'dr. Budi Santoso, Sp.Rad.', 'kains.demo@contoh.id', 'SIP-FM 503/001/DEMO', 'Kota Contoh'],
+      ['RS-DEMO2', 'RSMM', 'RS Mitra Medika', 'Jl. Melati Raya No. 12, Kota Contoh', 'dr. Ratna Wulandari, Sp.Rad.', 'radiologi.demo@contoh.id', 'SIP-FM 503/002/DEMO', 'Kota Contoh'],
+      ['RS-DEMO3', 'KUS', 'Klinik Utama Sentosa', 'Jl. Anggrek No. 8, Kabupaten Contoh', 'dr. Hendra Wijaya, Sp.Rad.', 'direktur.demo@contoh.id', '', 'Kabupaten Contoh']];
     rs.forEach(r => d.rs.push({ rs_id: r[0], kode: r[1], nama: r[2], alamat: r[3], telepon: '(021) 555-0100', nama_penandatangan: r[4], jabatan_penandatangan: 'Kepala Instalasi Radiologi',
-      nip_penandatangan: '', email_atasan: r[5], email_cc: '', logo_file_id: '', aktif: 'TRUE', dibuat: sekarang(), diubah: sekarang() }));
+      nip_penandatangan: '', email_atasan: r[5], email_cc: '', logo_file_id: '', aktif: 'TRUE', dibuat: sekarang(), diubah: sekarang(), no_izin_fismed: r[6], kota: r[7] }));
     const al = [
       ['RS-DEMO1', 'TPL-RU', 'RU-01', 'Siemens', 'Multix Top', 'SN-99420-X', 'Ruang Radiologi 1', { demo_emas: true }],
       ['RS-DEMO1', 'TPL-MOB', 'MX-02', 'GE', 'AMX 4 Plus', 'SN-MX-11029', 'Depo IGD', { demo_tren: [118.0, 112.3, 108.9, 104.2, 101.5, 85.65] }],
@@ -75,7 +75,7 @@ const Demo = (function () {
     al.forEach((x, i) => d.alat.push(Object.assign({ alat_id: 'AL-DEMO' + (i + 1), rs_id: x[0], template_id: x[1], kode: x[2], merek: x[3], tipe: x[4], no_seri_tabung: x[5], ruangan: x[6], foto_id: '', aktif: 'TRUE', catatan: '', dibuat: sekarang(), diubah: sekarang() }, x[7] || {})));
     d.pengguna.push({ email: 'fismed.demo@contoh.id', nama: 'Andi Pratama, S.Si., M.Si.', peran: 'FISMED', rs_ids: '', jabatan: 'Fisikawan Medis', aktif: 'TRUE', dibuat: sekarang() });
     d.pengguna.push({ email: 'kains.demo@contoh.id', nama: 'dr. Budi Santoso, Sp.Rad.', peran: 'ATASAN', rs_ids: 'RS-DEMO1', jabatan: 'Kepala Instalasi Radiologi', aktif: 'TRUE', dibuat: sekarang() });
-    d.pengaturan = { nama_fismed: 'Andi Pratama, S.Si., M.Si.', no_izin: 'SIP-FM 000/DEMO/2026', kota: 'Kota Contoh', pemisah_desimal: ',', toleransi_disetujui: sekarang() + ' (demo)', ttd_file_id: '' };
+    d.pengaturan = { nama_fismed: 'Andi Pratama, S.Si., M.Si.', no_izin: 'STR 0000/DEMO', kota: 'Kota Contoh', pemisah_desimal: ',', toleransi_disetujui: sekarang() + ' (demo)', ttd_file_id: '' };
     const fis = d.pengguna[0];
     const rencana = { 'AL-DEMO1': 'FINAL', 'AL-DEMO2': 'FINAL', 'AL-DEMO3': 'FINAL', 'AL-DEMO4': 'DRAF', 'AL-DEMO6': 'FINAL', 'AL-DEMO7': 'FINAL' };
     d.alat.forEach(a => {
@@ -155,6 +155,11 @@ const Demo = (function () {
         db.rs = db.rs.filter(r => r.rs_id !== o.rs_id).concat([o]);
         return ok(o, 'Rumah sakit tersimpan.');
       }
+      case 'rs.izin': {
+        const out = [];
+        (d.items || []).forEach(it => { const r = db.rs.find(x => x.rs_id === it.rs_id); if (r) { r.no_izin_fismed = it.no_izin_fismed || ''; r.kota = it.kota || ''; r.diubah = sekarang(); out.push(r); } });
+        return ok(out, 'Nomor izin & kota per rumah sakit tersimpan.');
+      }
       case 'alat.simpan': {
         const kode = String(d.kode || '').toUpperCase();
         if (db.alat.some(a => a.rs_id === d.rs_id && a.kode === kode && a.alat_id !== d.alat_id)) return fail('Kode ' + kode + ' sudah dipakai di RS ini.');
@@ -205,7 +210,7 @@ const Demo = (function () {
       case 'laporan.list': return ok(db.laporan.filter(l => boleh(l.rs_id)));
       case 'laporan.buat': {
         const rs = db.rs.find(r => r.rs_id === d.rs_id);
-        const row = { laporan_id: id('LAP'), rs_id: rs.rs_id, periode: d.periode, pdf_file_id: '', nama_file: 'Laporan_QC_' + (rs.kode || 'RS') + '_' + d.periode + '.pdf',
+        const row = { laporan_id: id('LAP'), rs_id: rs.rs_id, periode: d.periode, pdf_file_id: '', nama_file: 'Laporan_QC_' + (rs.kode || 'RS') + '_' + d.periode + (d.bahasa === 'en' ? '_EN' : '') + '.pdf',
           dikirim_ke: d.kirim ? (d.penerima || []).join(', ') : '', cc: d.kirim ? (d.cc || []).join(', ') : '', waktu: sekarang(), status_kirim: d.kirim ? 'TERKIRIM' : 'DIBUAT', pesan_error: '', dibuat_oleh: me.email };
         db.laporan.push(row);
         return ok({ laporan: row, pdf: '', nama_file: row.nama_file }, d.kirim ? 'Mode demo: email tidak benar-benar dikirim, tetapi tercatat di riwayat.' : 'Laporan tercatat (mode demo).');

@@ -15,10 +15,14 @@ js/config.js        ← isi URL /exec Web App di sini
 js/bersama.js       ← mesin penilaian & laporan (identik dengan Bersama.gs di backend)
 js/core.js          ← API, penyimpanan lokal, grafik, helper UI
 js/app.js           ← login, shell, router, antrean offline
+js/i18n.js          ← penerjemah antarmuka Indonesia ⇄ English (tombol ID/EN)
+js/i18n-en.js       ← kamus istilah antarmuka berbahasa Inggris
 js/hal-*.js         ← halaman: dasbor, input, riwayat, laporan, kelola, template, pengaturan
 js/demo.js          ← backend tiruan untuk Mode Demo
 js/icons.js         ← subset ikon Lucide (ISC License)
 ```
+
+Bahasa: tombol **ID / EN** di bilah atas dan halaman masuk. Pilihan tersimpan per browser. Laporan PDF punya pilihan bahasa sendiri di menu Laporan (berkas EN berakhiran `_EN.pdf`). Data yang Anda ketik (nama RS, ruangan, catatan) tidak diterjemahkan.
 
 Mode Demo: buka situs dengan akhiran `?demo`.
 

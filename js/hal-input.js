@@ -145,7 +145,8 @@ function gambarTab() {
   ps.forEach(p => { let g = grup.find(x => x.nama === (p.kelompok || 'Umum')); if (!g) grup.push(g = { nama: p.kelompok || 'Umum', ps: [] }); g.ps.push(p); });
   const kode = F.params.map(p => p.kode);
   box.innerHTML = grup.map((g, gi) => '<section class="card grp-card"><div class="card-h"><h3><span class="tag tag-soft">' + String(gi + 1).padStart(2, '0') + '</span>' + esc(g.nama) + '</h3><span class="small muted" data-gst="' + esc(g.nama) + '"></span></div>' +
-    g.ps.map(p => barisParam(p, kode)).join('') + '</section>').join('');
+    g.ps.map(p => barisParam(p, kode)).join('') + '</section>' +
+    (apakahKelompokLinier(g.nama, g.ps) ? '<section class="card grp-card lin-card" data-lin="' + esc(g.nama) + '"><div class="card-h"><h3>' + ic('chart-scatter') + 'Grafik linearitas — ' + esc(g.nama) + '</h3><span class="small muted">terukur vs nominal</span></div><div class="card-b"></div></section>' : '')).join('');
   // event
   $$('[data-in]', box).forEach(inp => {
     inp.addEventListener('input', () => { setInput(inp.dataset.in, { nilai: inp.value }); });
@@ -257,6 +258,24 @@ function perbaruiNilai() {
     if (cnt) { cnt.textContent = c.total ? c.isi + '/' + c.total : 'data'; cnt.className = 'cnt ' + (c.gagal ? 'bad' : c.total && c.isi === c.total ? 'ok' : ''); }
   });
   gambarRingkasSisi(ev);
+  $$('[data-lin]').forEach(sec => gambarLinierForm(sec, ev));
+}
+
+/** Grafik linearitas di form: titik terukur vs nominal (titik tengah rentang toleransi). */
+function gambarLinierForm(sec, ev) {
+  const ps = F.params.filter(p => p.kategori === F.tab && (p.kelompok || 'Umum') === sec.dataset.lin && p.tipe_toleransi === 'RENTANG');
+  const rows = ps.map(p => { const h = ev[p.kode] || {}; return { kode: p.kode, nama: p.nama, min: h.min !== null && h.min !== undefined ? h.min : p.batas_min, maks: h.maks !== null && h.maks !== undefined ? h.maks : p.batas_maks, nilai: h.nilai, status: h.status }; });
+  const t = titikLinier(rows), g = grafikLinier(t, { satuan: (ps[0] || {}).satuan, judul: 'Linearitas ' + sec.dataset.lin });
+  const r = g.reg, terisi = t.filter(x => x.y !== null).length, gagal = t.filter(x => x.status === 'GAGAL').length;
+  const u = (ps[0] || {}).satuan ? ' ' + ps[0].satuan : '';
+  $('.card-b', sec).innerHTML = '<div class="chart">' + g.svg + '<div class="chart-legend" style="margin-top:6px"><span><i style="background:#F37021"></i>Garis regresi</span><span style="color:#94A3B8"><i class="dash"></i><span style="color:var(--muted)">Ideal (terukur = nominal)</span></span><span><i style="background:#86EFAC;height:8px"></i>Rentang toleransi</span><span><i style="background:#DC2626;width:8px;height:8px"></i>Di luar rentang</span></div></div>' +
+    '<div class="lin-stat"><div><div class="k">Titik terisi</div><div class="v">' + terisi + ' / ' + t.length + '</div></div><div><div class="k">Di luar rentang</div><div class="v" style="color:' + (gagal ? 'var(--fail)' : 'var(--pass)') + '">' + gagal + '</div></div>' +
+    '<div><div class="k">Kemiringan</div><div class="v">' + (r.a !== undefined ? vrFormat(r.a, 4, sep()) : '—') + '</div></div><div><div class="k">R²</div><div class="v">' + (r.r2 !== undefined ? vrFormat(r.r2, 4, sep()) : '—') + '</div></div></div>' +
+    '<div class="tbl-wrap" style="border:1px solid var(--border);border-radius:var(--r-md)"><table class="tbl"><thead><tr><th>Bahan</th><th class="c">Nominal</th><th class="c">Terukur</th><th class="c">Selisih</th><th class="c">Rentang</th><th class="c">Status</th></tr></thead><tbody>' +
+    t.map(x => '<tr class="' + (x.status === 'GAGAL' ? 'is-fail' : '') + '"><td>' + esc(x.label) + '</td><td class="num">' + esc(vrFormat(x.x, 1, sep())) + '</td><td class="num">' + (x.y === null ? '—' : esc(vrFormat(x.y, 1, sep()))) + '</td>' +
+      '<td class="num">' + (x.y === null ? '—' : esc((x.y - x.x >= 0 ? '+' : '') + vrFormat(x.y - x.x, 1, sep()))) + '</td><td class="c m">' + esc(vrAngkaRingkas(x.min, sep()) + ' s.d. ' + vrAngkaRingkas(x.maks, sep()) + u) + '</td><td class="c">' + badge(x.status === 'KOSONG' ? 'BELUM' : x.status) + '</td></tr>').join('') + '</tbody></table></div>' +
+    '<p class="hint" style="margin:0">Nominal = titik tengah rentang toleransi tiap bahan. Kemiringan dan R² mendekati 1 berarti respons CT number linear. Grafik ini visualisasi; status Lulus/Gagal tetap dari rentang tiap bahan.' +
+    (terisi < 2 ? ' Isi minimal 2 bahan untuk menampilkan garis regresi.' : '') + '</p>';
 }
 
 function gambarSisi() {
