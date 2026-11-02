@@ -8,7 +8,7 @@
 const AppState = {
   demo: false, token: '', me: null, foto: '',
   periode: '', hariIni: '', pengaturan: {}, rs: [], alat: [], templates: [], params: [], pengguna: [],
-  sesi: [], sesiDari: '', laporan: [], hasil: {}, lampiran: {}, berkas: {}, filterRs: '', online: navigator.onLine !== false
+  sesi: [], sesiDari: '', laporan: [], hasil: {}, lampiran: {}, berkas: {}, filterRs: '', online: navigator.onLine !== false, lisensi: null
 };
 
 /* ---------------- Registri halaman (diisi hal-*.js, dijalankan oleh router di app.js) ---------------- */
@@ -33,8 +33,15 @@ const Perf = {
 };
 
 /* ---------------- API ---------------- */
-const GAS_URL = (window.APP_CONFIG && window.APP_CONFIG.GAS_URL) || '';
-function konfigurasiSiap() { return /^https:\/\/script\.google\.com\/macros\/s\/[^/]+\/exec$/.test(GAS_URL) && !/GANTI|XXXX/.test(GAS_URL); }
+const CFG = window.APP_CONFIG || {};
+function urlGasSah(u) { return /^https:\/\/script\.google\.com\/macros\/s\/[^/]+\/exec$/.test(u || '') && !/GANTI|XXXX/.test(u || ''); }
+/** Server lisensi (penjual). Bila diisi, backend tiap pelanggan ditemukan otomatis setelah login. */
+const LISENSI_URL = urlGasSah(CFG.LISENSI_URL) ? CFG.LISENSI_URL : '';
+function modeLisensi() { return !!LISENSI_URL; }
+/** Backend aktif: hasil login lisensi (tersimpan di perangkat) atau GAS_URL tetap di config.js. */
+let GAS_URL = (LISENSI_URL && Store.get('backend', '')) || CFG.GAS_URL || '';
+function setBackend(u) { GAS_URL = u || ''; if (LISENSI_URL) { if (u) Store.set('backend', u); else Store.del('backend'); } }
+function konfigurasiSiap() { return urlGasSah(GAS_URL); }
 const READ_ACTIONS = /^(auth\.config|boot|sesi\.list|hasil\.list|file\.ambil|laporan\.list|laporan\.unduh)$/;
 
 function uuid() { return (crypto.randomUUID ? crypto.randomUUID() : Date.now().toString(36) + Math.random().toString(36).slice(2)); }
@@ -78,6 +85,10 @@ async function api(action, data, opt = {}) {
     if (res.success || !res.retryable) break;
   }
   if (!res.success && res.data && res.data.code === 'AUTH' && action !== 'auth.login') onSessionExpired();
+  if (!res.success && res.data && res.data.code === 'LISENSI') {
+    if (res.data.lisensi) { AppState.lisensi = res.data.lisensi; if (window.bannerLisensi) bannerLisensi(); }
+    if (window.onLisensiDitolak && !opt.diam) onLisensiDitolak(res);
+  }
   return res;
 }
 function warmUpServer() { if (konfigurasiSiap() && !AppState.demo) fetch(GAS_URL + '?action=ping&t=' + Date.now(), { mode: 'no-cors', cache: 'no-store' }).catch(() => { }); }
@@ -117,6 +128,7 @@ function badge(st, teks) {
 
 function toast(msg, type) {
   type = type || 'info';
+  if (type === 'error' && window.__lisMsg && window.__lisMsg.m === msg && Date.now() - window.__lisMsg.t < 3000) return;   // sudah dijelaskan modal "Mode baca saja"
   const el = document.createElement('div');
   el.className = 'toast ' + type;
   el.innerHTML = ic({ success: 'circle-check', error: 'circle-x', warning: 'triangle-alert', info: 'info' }[type] || 'info') + '<div>' + esc(msg) + '</div>';

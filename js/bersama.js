@@ -9,7 +9,7 @@
  * Kalau mengubah satu, salin ke yang lain supaya hasil klien = server.
  * ===================================================================== */
 
-var VR_VERSI = '1.0.0';
+var VR_VERSI = '2.0.0';
 var VR_KATEGORI = ['Keselamatan', 'Mekanik', 'Kualitas Citra', 'Dosimetri'];
 var VR_KATEGORI_KOLOM = { 'Keselamatan': 'st_keselamatan', 'Mekanik': 'st_mekanik', 'Kualitas Citra': 'st_citra', 'Dosimetri': 'st_dosimetri' };
 var VR_TIPE_INPUT = { ANGKA: 'Angka (diukur)', HITUNG: 'Dihitung otomatis (rumus)', KUALITATIF: 'Pilihan (kualitatif)' };

@@ -72,7 +72,7 @@ daftarHalaman('dasbor', {
       [['Laporan terkirim', lapTerkirim.length + ' / ' + rsTampil.length + ' RS'], ['Alat siap dilaporkan', selesai.length + ' / ' + alat.length], ['Temuan gagal', gagal.length + ' alat']]
         .map(x => '<div class="hstack between" style="border-bottom:1px solid rgba(255,255,255,.08);padding-bottom:10px"><span class="muted">' + x[0] + '</span><b class="mono">' + x[1] + '</b></div>').join('') +
       '<div><div class="hstack between small" style="margin-bottom:6px"><span class="muted">Kelengkapan QC</span><b class="mono">' + persen + '%</b></div><div class="progress"><i style="width:' + persen + '%"></i></div></div>' +
-      '<a class="btn btn-on-dark btn-block" href="#/laporan">' + (f ? 'Buka Laporan' : 'Lihat & Unduh Laporan') + ic('arrow-right') + '</a></div></div>' +
+      (f ? '<a class="btn btn-on-dark btn-block" href="#/laporan">Buka Laporan' + ic('arrow-right') + '</a>' : '<a class="btn btn-on-dark btn-block" href="#/riwayat">Lihat Riwayat & Tren' + ic('arrow-right') + '</a>') + '</div></div>' +
       '</div>' +
       '<div class="card strip">' +
       [['calculator', 'Lulus/Gagal otomatis', 'Dinilai saat nilai diketik, dibulatkan half-up.'], ['cloud-off', 'Simpan draf offline', 'Isi di ruang tanpa sinyal, kirim belakangan.'],

@@ -19,6 +19,7 @@ const I18N = {
     this.lang = lang === 'en' ? 'en' : 'id';
     try { localStorage.setItem('verirad:lang', this.lang); } catch (e) { }
     document.documentElement.lang = this.lang;
+    if (window.__halLis) return window.__halLis();                  // halaman langganan (Berlangganan/Pasang/Admin)
     if (AppState.me && AppState.token) { renderShell(); rute(); } else renderLogin();
   }
 };

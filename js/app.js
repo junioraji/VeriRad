@@ -16,7 +16,11 @@ const Antrean = {
     this._jalan = true;
     let berhasil = 0;
     for (const it of l) {
-      const r = await api(it.action, it.data, { reqId: it.reqId });
+      const r = await api(it.action, it.data, { reqId: it.reqId, diam: true });
+      if (r.data && r.data.code === 'LISENSI') {                       // simpan di perangkat, kirim setelah diperpanjang
+        if (Date.now() - (window.__antreLis || 0) > 600000) { window.__antreLis = Date.now(); toast('Data QC di perangkat ini disimpan dulu dan dikirim otomatis setelah langganan diperpanjang.', 'warning'); }
+        break;
+      }
       if (r.success) {
         berhasil++;
         this.simpan(this.list().filter(x => x.reqId !== it.reqId));
@@ -35,7 +39,8 @@ const Antrean = {
 function terapkanBoot(b) {
   Object.assign(AppState, {
     me: b.me, pengaturan: b.pengaturan || {}, rs: b.rs || [], alat: b.alat || [], templates: b.templates || [], params: b.params || [],
-    pengguna: b.pengguna || [], sesi: b.sesi || [], sesiDari: b.sesiDari || '', laporan: b.laporan || [], hariIni: b.hariIni || ''
+    pengguna: b.pengguna || [], sesi: b.sesi || [], sesiDari: b.sesiDari || '', laporan: b.laporan || [], hariIni: b.hariIni || '',
+    lisensi: b.lisensi || null
   });
   AppState.hasil = {}; AppState.lampiran = {};
   if (!AppState.periode) AppState.periode = Store.get(userKey('periode'), '') || b.periode;
@@ -72,6 +77,7 @@ function keluar(semua) {
   const lanjut = async () => {
     if (semua && !AppState.demo) await api('auth.keluarSemua', {});
     if (!AppState.demo) { Store.del(userKey('boot')); Store.del('sesi'); }
+    if (modeLisensi() && !AppState.demo) { Lis.lupa(); setBackend(''); }
     try { if (window.google && google.accounts) google.accounts.id.disableAutoSelect(); } catch (e) { }
     AppState.token = ''; AppState.me = null; AppState.demo = false;
     history.replaceState(null, '', location.pathname);
@@ -91,9 +97,10 @@ function onSessionExpired() {
 
 /* ---------------- Tampilan login ---------------- */
 function renderLogin(pesan) {
+  window.__halLis = null; if (window.Lis) Lis.henti();
   document.title = tr('Masuk') + ' — VeriRad';
-  const siap = konfigurasiSiap();
-  const demoBoleh = !siap || /[?&]demo\b/.test(location.search);
+  const siap = modeLisensi() || konfigurasiSiap();
+  const demoBoleh = !siap || modeLisensi() || /[?&]demo\b/.test(location.search);
   $('#app').innerHTML =
     '<div class="login">' +
     '<section class="login-art">' +
@@ -109,13 +116,14 @@ function renderLogin(pesan) {
     '<h2>Masuk ke VeriRad</h2><p class="muted" style="margin:0">Gunakan akun Gmail yang terdaftar.</p>' +
     '<div id="gbtn" class="gbtn-wrap">' + (siap ? '<div class="skel" style="width:300px;height:40px"></div>' : '') + '</div>' +
     '<div id="login-msg">' + (pesan || '') + '</div>' +
-    (!siap ? '<div class="banner banner-warn" style="margin-top:8px">' + ic('triangle-alert') + '<div class="t small"><b>Konfigurasi belum lengkap.</b> Isi URL Web App di <span class="mono">js/config.js</span>. Sementara itu Anda bisa mencoba Mode Demo.</div></div>' : '') +
+    (!siap ? '<div class="banner banner-warn" style="margin-top:8px">' + ic('triangle-alert') + '<div class="t small"><b>Konfigurasi belum lengkap.</b> Isi LISENSI_URL atau GAS_URL di <span class="mono">js/config.js</span>. Sementara itu Anda bisa mencoba Mode Demo.</div></div>' : '') +
     (demoBoleh ? '<div class="divider">atau coba tanpa server</div><div class="stack" style="gap:8px">' +
       '<button class="btn btn-block" data-demo="FISMED">' + ic('flask-conical') + 'Mode Demo — Fisikawan Medis</button>' +
       '<button class="btn btn-block btn-ghost" data-demo="ATASAN">' + ic('eye') + 'Mode Demo — Atasan (lihat saja)</button>' +
       '<p class="hint" style="text-align:center">Data contoh fiktif, hanya di browser ini, hilang saat dimuat ulang.</p></div>' : '') +
     '<div style="margin-top:16px">' + tombolPasang('btn btn-block btn-ghost') + '</div>' +
-    '<p class="hint" style="margin-top:20px;text-align:center">Belum terdaftar? Hubungi fisikawan medis Anda.</p>' +
+    (modeLisensi() ? '<p class="hint" style="margin-top:20px;text-align:center">Fisikawan medis: masuk untuk berlangganan atau memasang VeriRad. Atasan: masuk dengan email yang ditautkan fisikawan medis Anda.</p>' :
+      '<p class="hint" style="margin-top:20px;text-align:center">Belum terdaftar? Hubungi fisikawan medis Anda.</p>') +
     '</div></section></div>';
   $$('[data-demo]').forEach(b => b.addEventListener('click', () => mulaiDemo(b.dataset.demo)));
   if (siap) pasangGoogle();
@@ -127,7 +135,7 @@ function mulaiDemo(peran) {
   toast('Mode Demo aktif. Data contoh fiktif dan tidak dikirim ke server.', 'info');
 }
 async function pasangGoogle() {
-  const cfg = await api('auth.config', {});
+  const cfg = modeLisensi() ? await Lis.config() : await api('auth.config', {});
   const box = $('#gbtn');
   if (!box) return;
   if (!cfg.success) { box.innerHTML = ''; $('#login-msg').innerHTML = '<div class="banner banner-fail small">' + ic('circle-x') + '<div class="t">Server tidak bisa dihubungi: ' + esc(cfg.message) + '</div></div>'; return; }
@@ -144,6 +152,14 @@ async function pasangGoogle() {
 }
 async function onGoogleCredential(resp) {
   const msg = $('#login-msg');
+  if (modeLisensi()) {
+    if (window.__setelahMasukLisensi) {                                  // login dari halaman Admin
+      const r = await Lis.panggil('masuk', { idToken: resp.credential });
+      if (!r.success) { if (msg) msg.innerHTML = '<div class="banner banner-fail small">' + ic('circle-x') + '<div class="t">' + esc(r.message) + '</div></div>'; return; }
+      Lis.idToken = resp.credential; return window.__setelahMasukLisensi(r.data);
+    }
+    return masukLisensi(resp.credential);
+  }
   msg.innerHTML = '<p class="hint" style="text-align:center">' + ic('loader-circle', 'spin') + ' Memverifikasi akun…</p>';
   const r = await api('auth.login', { idToken: resp.credential });
   if (r.success) return masuk(r.data);
@@ -159,9 +175,9 @@ async function onGoogleCredential(resp) {
 
 /* ---------------- Shell ---------------- */
 const NAV = [
-  { id: 'dasbor', label: 'Dasbor', ikon: 'layout-dashboard' },
+  { id: 'dasbor', label: 'Dasbor', ikon: 'layout-dashboard', atasan: true },
   { id: 'input', label: 'Input QC', ikon: 'clipboard-pen-line', fismed: true, hitung: true },
-  { id: 'riwayat', label: 'Riwayat & Tren', ikon: 'chart-line' },
+  { id: 'riwayat', label: 'Riwayat & Tren', ikon: 'chart-line', atasan: true },
   { id: 'laporan', label: 'Laporan', ikon: 'file-text' },
   { grp: 'Data Master', fismed: true },
   { id: 'kelola', label: 'Kelola RS & Alat', ikon: 'building-2', fismed: true },
@@ -170,16 +186,17 @@ const NAV = [
 ];
 function hitungBelum() { return alatAktif().filter(a => statusAlat(a.alat_id, AppState.periode).st === 'BELUM' || statusAlat(a.alat_id, AppState.periode).st === 'DRAF').length; }
 function renderShell() {
+  window.__halLis = null;
   const me = AppState.me, f = fismed();
-  const nav = NAV.filter(n => !n.fismed || f).map(n => n.grp ? '<div class="grp">' + esc(n.grp) + '</div>' :
+  const nav = NAV.filter(n => f ? true : n.atasan).map(n => n.grp ? '<div class="grp">' + esc(n.grp) + '</div>' :
     '<a href="#/' + n.id + '" data-nav="' + n.id + '">' + ic(n.ikon) + '<span>' + esc(n.label) + '</span>' + (n.hitung && hitungBelum() ? '<span class="cnt">' + hitungBelum() + '</span>' : '') + '</a>').join('');
   const rsAtasan = !f ? rsAktif().map(r => r.nama).join(', ') : '';
   $('#app').classList.toggle('is-demo', !!AppState.demo);
   $('#app').innerHTML = (AppState.demo ? '<div class="demo-ribbon">MODE DEMO — data contoh fiktif, tidak tersimpan ke server</div>' : '') +
     '<div class="shell"><aside class="sidebar" id="sidebar">' +
     '<div class="brand"><div class="logo">' + ic('shield-check') + '</div><div><b>VeriRad</b><span>Smart QC Radiologi</span></div></div>' +
-    '<nav class="nav" aria-label="Menu utama">' + nav + tombolPasang('nav-pasang') + '</nav>' +
-    '<div class="side-foot">' + (!f ? '<div class="side-card"><b>' + ic('eye') + 'Akses lihat saja</b>Anda memantau hasil QC dan laporan untuk ' + esc(rsAtasan || 'RS Anda') + '.</div>' :
+    '<nav class="nav" aria-label="Menu utama">' + nav + (f && (Lis.sesi() || {}).admin && !AppState.demo ? '<a href="#/admin" data-nav="admin">' + ic('shield-check') + '<span>Admin Lisensi</span></a>' : '') + tombolPasang('nav-pasang') + '</nav>' +
+    '<div class="side-foot">' + (!f ? '<div class="side-card"><b>' + ic('eye') + 'Akses lihat saja</b>Anda memantau hasil QC untuk ' + esc(rsAtasan || 'RS Anda') + '.</div>' :
       '<div class="side-card"><b>' + ic('shield-check') + 'QC tepat, laporan cepat</b>Toleransi mengikuti template yang Anda tetapkan.</div>') +
     '<div class="user-box"><div class="avatar">' + (AppState.foto ? '<img src="' + esc(AppState.foto) + '" alt="">' : esc(inisial(me.nama || me.email))) + '</div>' +
     '<div style="min-width:0;flex:1"><div class="nm">' + esc(me.nama || me.email) + '</div><div class="rl">' + (f ? 'Fisikawan Medis' : esc(me.jabatan || 'Atasan')) + '</div></div>' +
@@ -190,12 +207,13 @@ function renderShell() {
     daftarPeriode().map(p => '<option value="' + p + '"' + (p === AppState.periode ? ' selected' : '') + '>' + esc(vrNamaPeriode(p)) + '</option>').join('') + '</select>' +
     '<span class="pill hide-sm" id="pill-sync"><span class="dot"></span><span id="pill-t">Tersambung</span></span>' +
     '<button class="btn btn-ghost btn-icon" id="btn-segar" title="Muat ulang data" aria-label="Muat ulang data">' + ic('refresh-cw') + '</button>' +
-    '</header><main class="content" id="page" tabindex="-1"></main></div></div>';
+    '</header><div id="lis-banner" class="lis-banner"></div><main class="content" id="page" tabindex="-1"></main></div></div>';
   $('#burger').addEventListener('click', () => toggleSidebar(true));
   $('#btn-keluar').addEventListener('click', () => menuAkun());
   $('#btn-segar').addEventListener('click', async e => { setBusy(e.currentTarget, true, ''); await segarkanBoot(); });
   $('#sel-periode').addEventListener('change', e => { AppState.periode = e.target.value; Store.set(userKey('periode'), AppState.periode); renderShell(); rute(); });
   perbaruiPill();
+  bannerLisensi();
 }
 function menuAkun() {
   modal({ judul: 'Akun', ikon: 'user', isi: '<p style="margin:0 0 4px"><b>' + esc(AppState.me.nama || '') + '</b></p><p class="mono small muted" style="margin:0">' + esc(AppState.me.email) + '</p>' +
@@ -217,11 +235,14 @@ function perbaruiPill() {
 }
 
 /* ---------------- Router ---------------- */
+const HAL_ATASAN = ['dasbor', 'riwayat'];
 function rute() {
+  if (/^#\/admin\b/.test(location.hash)) return renderAdmin();
   if (!AppState.me) return;
+  if (!$('#page')) { renderShell(); }
   const [nama, param] = location.hash.replace(/^#\/?/, '').split('/');
   let def = Halaman[nama];
-  if (!def || (def.akses === 'fismed' && !fismed())) { if (location.hash !== '#/dasbor') { location.hash = '#/dasbor'; return; } def = Halaman.dasbor; }
+  if (!def || (def.akses === 'fismed' && !fismed()) || (!fismed() && HAL_ATASAN.indexOf(nama) === -1)) { if (location.hash !== '#/dasbor') { location.hash = '#/dasbor'; return; } def = Halaman.dasbor; }
   $$('[data-nav]').forEach(a => a.toggleAttribute('aria-current', false));
   const aktif = $('[data-nav="' + (Halaman[nama] ? nama : 'dasbor') + '"]');
   if (aktif) aktif.setAttribute('aria-current', 'page');
@@ -265,6 +286,7 @@ document.addEventListener('visibilitychange', () => {
 setInterval(() => Antrean.flush(), 60000);
 
 document.addEventListener('DOMContentLoaded', () => {
+  if (/^#\/admin\b/.test(location.hash)) return renderAdmin();
   const s = Store.get('sesi', null);
   if (konfigurasiSiap() && s && s.token && !tokenKedaluwarsa(s.token)) {
     AppState.token = s.token; AppState.foto = s.foto || '';

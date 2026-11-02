@@ -3,7 +3,7 @@
  * ===================================================================== */
 'use strict';
 
-const RW = { rs: '', alat: '', kat: '', param: '', rentang: 12, cari: '' };
+const RW = { rs: '', alat: '', kat: '', param: '', rentang: 12, cari: '', dari: '', sampai: '' };   // rentang: 6 | 12 | 0 (semua) | -1 (pilih bulan)
 
 daftarHalaman('riwayat', {
   judul: 'Riwayat & Tren',
@@ -16,7 +16,15 @@ daftarHalaman('riwayat', {
     if (!alatRs.find(a => a.alat_id === RW.alat)) { RW.alat = alatRs[0] ? alatRs[0].alat_id : ''; RW.param = ''; }
     const a = getAlat(RW.alat);
     const per = AppState.periode;
-    const dari = RW.rentang ? vrGeserPeriode(per, -(RW.rentang - 1)) : '2000-01';
+    const kini = AppState.periodeSekarang || per;
+    if (RW.rentang === -1) {
+      if (!RW.sampai) RW.sampai = per;
+      if (!RW.dari) RW.dari = vrGeserPeriode(RW.sampai, -5);
+      if (RW.dari > RW.sampai) { const t = RW.dari; RW.dari = RW.sampai; RW.sampai = t; }
+    }
+    const dari = RW.rentang === -1 ? RW.dari : RW.rentang ? vrGeserPeriode(per, -(RW.rentang - 1)) : '2000-01';
+    const sampai = RW.rentang === -1 ? RW.sampai : per;
+    const opsiBulan = pilih => { const o = []; for (let i = 0; i < 60; i++) { const b = vrGeserPeriode(kini > per ? kini : per, -i); o.push('<option value="' + b + '"' + (b === pilih ? ' selected' : '') + '>' + esc(vrNamaPeriode(b)) + '</option>'); } return o.join(''); };
     el.innerHTML = '<div class="page-h"><div><h1>Riwayat & Analisis Tren QC</h1><p>Lihat perubahan nilai parameter dari bulan ke bulan untuk mendeteksi pergeseran sebelum alat gagal.</p></div>' +
       '<div class="act"><button class="btn" id="csv"' + (a ? '' : ' disabled') + '>' + ic('download') + 'Ekspor CSV</button></div></div>' +
       '<div class="card card-b"><div class="filters">' +
@@ -24,14 +32,18 @@ daftarHalaman('riwayat', {
       '<div class="field" style="min-width:220px"><label for="rw-alat">Alat</label><select class="input" id="rw-alat">' + alatRs.map(x => '<option value="' + x.alat_id + '"' + (x.alat_id === RW.alat ? ' selected' : '') + '>' + esc(x.kode + ' · ' + x.merek + ' ' + x.tipe + (vrBenar(x.aktif) ? '' : ' (nonaktif)')) + '</option>').join('') + '</select></div>' +
       '<div class="field"><label for="rw-kat">Kategori</label><select class="input" id="rw-kat"></select></div>' +
       '<div class="field" style="min-width:260px;flex:1"><label for="rw-param">Parameter</label><select class="input" id="rw-param"></select></div>' +
-      '<div class="field"><span class="lbl">Rentang</span><div class="hstack">' + [[6, '6 bln'], [12, '12 bln'], [0, 'Semua']].map(x => '<button class="chip" data-rg="' + x[0] + '" aria-pressed="' + (RW.rentang === x[0]) + '">' + x[1] + '</button>').join('') + '</div></div>' +
+      '<div class="field"><span class="lbl">Rentang</span><div class="hstack">' + [[6, '6 bln'], [12, '12 bln'], [0, 'Semua'], [-1, 'Pilih bulan']].map(x => '<button class="chip" data-rg="' + x[0] + '" aria-pressed="' + (RW.rentang === x[0]) + '">' + (x[0] === -1 ? ic('calendar-days') : '') + x[1] + '</button>').join('') + '</div></div>' +
+      (RW.rentang === -1 ? '<div class="rentang-kustom"><div class="field"><label for="rw-dari">Dari bulan</label><select class="input" id="rw-dari">' + opsiBulan(RW.dari) + '</select></div>' +
+        '<span class="rk-sd" aria-hidden="true">s.d.</span><div class="field"><label for="rw-sampai">Sampai bulan</label><select class="input" id="rw-sampai">' + opsiBulan(RW.sampai) + '</select></div>' +
+        '<span class="small muted rk-info">' + (selisihBulan(RW.dari, RW.sampai) + 1) + ' bulan</span></div>' : '') +
       '</div></div><div id="rw-isi" class="stack"><div class="skel" style="height:110px"></div><div class="skel" style="height:320px"></div></div>';
     $('#rw-rs', el).addEventListener('change', e => { RW.rs = e.target.value; RW.alat = ''; RW.param = ''; Halaman.riwayat.render(el); });
     $('#rw-alat', el).addEventListener('change', e => { RW.alat = e.target.value; RW.param = ''; RW.kat = ''; Halaman.riwayat.render(el); });
     $$('[data-rg]', el).forEach(b => b.addEventListener('click', () => { RW.rentang = Number(b.dataset.rg); Halaman.riwayat.render(el); }));
+    ['dari', 'sampai'].forEach(k => { const s = $('#rw-' + k, el); if (s) s.addEventListener('change', e => { RW[k] = e.target.value; Halaman.riwayat.render(el); }); });
     if (!a) { $('#rw-isi', el).innerHTML = kosong('Belum ada alat', 'Rumah sakit ini belum punya alat terdaftar.'); return; }
     if (!(await muatSesiSejak(dari))) return;
-    const sesi = AppState.sesi.filter(s => s.alat_id === a.alat_id && s.status_sesi === 'FINAL' && s.periode >= dari && s.periode <= per).sort((x, y) => x.periode < y.periode ? -1 : 1);
+    const sesi = AppState.sesi.filter(s => s.alat_id === a.alat_id && s.status_sesi === 'FINAL' && s.periode >= dari && s.periode <= sampai).sort((x, y) => x.periode < y.periode ? -1 : 1);
     if (!(await muatHasil(sesi.map(s => s.sesi_id)))) return;
     if (!document.body.contains(el) || RW.alat !== a.alat_id) return;
     // daftar parameter: gabungan template sekarang + riwayat
@@ -51,8 +63,8 @@ daftarHalaman('riwayat', {
     $('#rw-param', el).innerHTML = daftar.map(p => '<option value="' + p.kode + '"' + (p.kode === RW.param ? ' selected' : '') + '>' + esc(p.nama + (p.tol === 'TIDAK_ADA' ? ' (data)' : '')) + '</option>').join('');
     $('#rw-kat', el).addEventListener('change', e => { RW.kat = e.target.value; RW.param = ''; Halaman.riwayat.render(el); });
     $('#rw-param', el).addEventListener('change', e => { RW.param = e.target.value; Halaman.riwayat.render(el); });
-    $('#csv', el).addEventListener('click', () => eksporCsvAlat(a, sesi));
-    gambarRiwayat($('#rw-isi', el), a, sesi, peta[RW.param], dari, per);
+    $('#csv', el).addEventListener('click', () => eksporCsvAlat(a, sesi, RW.rentang === -1 ? dari + '_' + sampai : ''));
+    gambarRiwayat($('#rw-isi', el), a, sesi, peta[RW.param], dari, sampai);
   }
 });
 
@@ -88,7 +100,7 @@ function gambarRiwayat(box, a, sesi, p, dari, per) {
       kpi('Tertinggi', fmt(lebihTinggi), p.satuan, 'arrow-up', lebihTinggi !== null ? singkatBulan((ada.find(t => t.v === lebihTinggi) || {}).b) : '')
       : kpi('Dinilai', dinilai.length, '', 'list-checks', 'sesi final') + kpi('Lulus', lulus, '', 'circle-check', '') + kpi('Gagal', dinilai.length - lulus, '', 'circle-x', '')) +
     '</div>' +
-    '<div class="card"><div class="card-h"><h2>' + ic('chart-line') + 'Grafik tren & batas toleransi</h2><span class="small muted">Kelulusan ' + lulus + '/' + dinilai.length + '</span></div><div class="card-b"><div class="chart" id="rw-grafik"></div></div></div>' +
+    '<div class="card"><div class="card-h"><h2>' + ic('chart-line') + 'Grafik tren & batas toleransi</h2><span class="small muted">' + (bulan.length ? esc(singkatBulan(bulan[0]) + ' – ' + singkatBulan(bulan[bulan.length - 1])) + ' · ' : '') + 'Kelulusan ' + lulus + '/' + dinilai.length + '</span></div><div class="card-b"><div class="chart" id="rw-grafik"></div></div></div>' +
     '<div class="card"><div class="card-h"><h2>' + ic('list') + 'Log pengukuran</h2><div class="field" style="min-width:220px"><input class="input" id="rw-cari" placeholder="Cari periode, catatan, penguji…" value="' + esc(RW.cari) + '"></div></div>' +
     '<div class="tbl-wrap"><table class="tbl"><thead><tr><th>Periode</th><th>Tanggal uji</th><th class="c">Nilai</th><th class="c">Kriteria</th><th class="c">Status</th><th>Penguji</th><th>Catatan</th></tr></thead><tbody id="rw-tbody"></tbody></table></div>' +
     '<div class="tbl-foot"><span id="rw-n"></span><span>Hanya sesi final yang ditampilkan.</span></div></div>';
@@ -123,12 +135,14 @@ function gambarRiwayat(box, a, sesi, p, dari, per) {
   $('#rw-cari', box).addEventListener('input', debounce(e => { RW.cari = e.target.value; isiTabel(); }, 200));
 }
 
-function eksporCsvAlat(a, sesi) {
+function selisihBulan(a, b) { const [y1, m1] = a.split('-').map(Number), [y2, m2] = b.split('-').map(Number); return (y2 - y1) * 12 + (m2 - m1); }
+
+function eksporCsvAlat(a, sesi, akhiran) {
   const rs = getRs(a.rs_id) || {};
   const baris = [['RS', 'Kode alat', 'Merek', 'Tipe', 'No seri tabung', 'Periode', 'Tanggal uji', 'Kategori', 'Kelompok', 'Kode parameter', 'Parameter', 'Nilai', 'Satuan', 'Kriteria', 'Status', 'Alasan N/A', 'Penguji']];
   sesi.forEach(s => (AppState.hasil[s.sesi_id] || []).forEach(h => baris.push([rs.nama, a.kode, a.merek, a.tipe, a.no_seri_tabung, s.periode, s.tanggal, h.kategori, h.kelompok, h.kode, h.nama,
     h.status === 'NA' ? '' : (h.tipe_input === 'KUALITATIF' ? h.nilai : vrFormat(h.nilai, h.desimal, sep())), h.satuan,
     vrTeksToleransi(h, h.min_terpakai === '' ? null : vrAngka(h.min_terpakai), h.maks_terpakai === '' ? null : vrAngka(h.maks_terpakai), sep()), LABEL_STATUS[h.status] || h.status, h.alasan_na, s.penguji_nama || s.penguji_email])));
   if (baris.length === 1) return toast('Belum ada data final untuk diekspor.', 'warning');
-  unduhCsv('Riwayat_QC_' + (rs.kode || 'RS') + '_' + a.kode + '.csv', baris);
+  unduhCsv('Riwayat_QC_' + (rs.kode || 'RS') + '_' + a.kode + (akhiran ? '_' + akhiran : '') + '.csv', baris);
 }

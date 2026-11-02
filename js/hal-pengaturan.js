@@ -8,7 +8,8 @@ daftarHalaman('pengaturan', {
   judul: 'Pengaturan', akses: 'fismed',
   render(el) {
     const p = AppState.pengaturan;
-    el.innerHTML = '<div class="page-h"><div><h1>Pengaturan</h1><p>Profil fisikawan medis, tanda tangan laporan, dan siapa saja yang boleh membuka VeriRad.</p></div></div>' +
+    el.innerHTML = '<div class="page-h"><div><h1>Pengaturan</h1><p>Langganan, profil fisikawan medis, tanda tangan laporan, dan siapa saja yang boleh membuka VeriRad.</p></div></div>' +
+      kartuLangganan() +
       '<div class="row r-1-1">' +
       '<div class="card"><div class="card-h"><h2>' + ic('id-card') + 'Profil fisikawan medis</h2></div><div class="card-b stack">' +
       '<div class="field"><label for="p-nama">Nama lengkap & gelar <span class="req">*</span></label><input class="input" id="p-nama" value="' + esc(p.nama_fismed || '') + '" placeholder="mis. Andi Pratama, S.Si., M.Si."></div>' +
@@ -38,7 +39,7 @@ daftarHalaman('pengaturan', {
         '<td class="small">' + (u.peran === 'FISMED' ? 'Semua RS' : esc(String(u.rs_ids || '').split(',').map(id => (getRs(id.trim()) || {}).nama || id).join(', '))) + '</td>' +
         '<td class="c">' + (vrBenar(u.aktif) ? '<span class="badge b-lulus">Aktif</span>' : '<span class="badge b-na">Nonaktif</span>') + '</td>' +
         '<td><div class="hstack" style="flex-wrap:nowrap">' + (u.email.toLowerCase() === AppState.me.email ? '<span class="small muted">Anda</span>' : '<button class="btn btn-sm btn-ghost" data-u="' + esc(u.email) + '">' + ic('pencil') + 'Ubah</button><button class="btn btn-sm btn-ghost btn-icon" data-hapus="' + esc(u.email) + '" aria-label="Hapus">' + ic('trash-2') + '</button>') + '</div></td></tr>').join('') +
-      '</tbody></table></div><div class="tbl-foot"><span>Atasan masuk dengan akun Google-nya sendiri dan hanya melihat RS yang dicentang. Fisikawan medis tambahan punya akses penuh.</span></div></div>' +
+      '</tbody></table></div><div class="tbl-foot"><span>Atasan masuk dengan akun Google-nya sendiri di alamat aplikasi yang sama dan hanya melihat Dasbor serta Riwayat & Tren RS yang dicentang. Paket VeriRad: 1 fisikawan medis, atasan tidak dibatasi.</span></div></div>' +
       '<div class="row r-1-1"><div class="card"><div class="card-h"><h2>' + ic('lock') + 'Keamanan</h2></div><div class="card-b stack">' +
       '<p class="small muted" style="margin:0">Sesi login berlaku 12 jam. Bila perangkat hilang atau dipinjam, akhiri semua sesi Anda.</p>' +
       '<div><button class="btn btn-danger" id="k-semua">' + ic('log-out') + 'Keluar dari semua perangkat</button></div>' +
@@ -50,6 +51,7 @@ daftarHalaman('pengaturan', {
       '<dt>Aplikasi HP/laptop</dt><dd>' + (PWA.standalone ? 'Terpasang' : PWA.bisa() ? 'Bisa dipasang' : 'Buka di Chrome/Edge/Safari untuk memasang') + '</dd></dl>' +
       '<div style="margin-top:12px">' + tombolPasang('btn btn-sm') + '</div>' +
       '<p class="hint" style="margin-top:12px">Ketik <span class="mono">Perf.table()</span> di console browser untuk melihat waktu respons server.</p></div></div></div>';
+    pasangKartuLangganan(el);
     dataUriBerkas(p.ttd_file_id).then(u => { const b = $('#ttd-box'); if (u && b) { b.classList.remove('xbox'); b.innerHTML = '<img src="' + u + '" alt="Tanda tangan">'; } });
     $('#p-simpan', el).addEventListener('click', async e => {
       const nama = $('#p-nama', el).value.trim();
@@ -110,7 +112,9 @@ function modalPengguna(u) {
     judul: baru ? 'Tautkan pengguna' : 'Ubah ' + u.email, ikon: 'user-plus',
     isi: '<div class="stack"><div class="field"><label for="u-email">Email Google (Gmail) <span class="req">*</span></label><input class="input mono" type="email" id="u-email" value="' + esc(u.email || '') + '"' + (baru ? '' : ' readonly') + ' placeholder="nama@gmail.com"></div>' +
       '<div class="grid-2"><div class="field"><label for="u-nama">Nama</label><input class="input" id="u-nama" value="' + esc(u.nama || '') + '"></div><div class="field"><label for="u-jab">Jabatan</label><input class="input" id="u-jab" value="' + esc(u.jabatan || '') + '" placeholder="mis. Kepala Instalasi Radiologi"></div></div>' +
-      '<div class="field"><label for="u-peran">Peran</label><select class="input" id="u-peran"><option value="ATASAN"' + (u.peran !== 'FISMED' ? ' selected' : '') + '>Atasan — hanya melihat RS terpilih</option><option value="FISMED"' + (u.peran === 'FISMED' ? ' selected' : '') + '>Fisikawan medis — akses penuh</option></select></div>' +
+      '<div class="field"><label for="u-peran">Peran</label><select class="input" id="u-peran"><option value="ATASAN"' + (u.peran !== 'FISMED' ? ' selected' : '') + '>Atasan — hanya melihat RS terpilih</option>' +
+      (u.peran === 'FISMED' ? '<option value="FISMED" selected>Fisikawan medis — akses penuh</option>' : '<option value="FISMED" disabled>Fisikawan medis — paket hanya untuk 1 orang</option>') + '</select>' +
+      '<span class="hint">Atasan hanya melihat Dasbor dan Riwayat & Tren untuk RS yang dicentang.</span></div>' +
       '<fieldset class="field" id="u-rs" style="border:1px solid var(--border);border-radius:var(--r-sm);padding:12px"><legend class="lbl">Rumah sakit yang bisa dilihat</legend>' +
       rsAktif().map(r => '<label class="check"><input type="checkbox" value="' + r.rs_id + '"' + (ids.indexOf(r.rs_id) > -1 ? ' checked' : '') + '><span>' + esc(r.nama) + '</span></label>').join('') + '</fieldset>' +
       '<label class="switch"><input type="checkbox" id="u-aktif"' + (vrBenar(u.aktif) ? ' checked' : '') + '><span class="trk"></span>Aktif (boleh masuk)</label></div>',

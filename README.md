@@ -4,7 +4,8 @@ Aplikasi web QC bulanan alat radiologi untuk fisikawan medis yang memegang beber
 
 - **Frontend:** HTML/CSS/JS murni (tanpa framework), di-host di GitHub Pages.
 - **Backend:** Google Apps Script sebagai REST API (berkas `.gs` terpisah, tidak ada di repo ini). Database di Google Sheets, berkas di Google Drive, email lewat Gmail.
-- **Login:** Google Sign-In. Token diverifikasi di server, lalu dibuatkan token sesi HMAC 12 jam. Peran: Fisikawan Medis (penuh) dan Atasan (lihat saja, per RS).
+- **Login:** Google Sign-In. Token diverifikasi di server, lalu dibuatkan token sesi HMAC 12 jam. Peran: Fisikawan Medis (penuh) dan Atasan (lihat saja: Dasbor + Riwayat & Tren, per RS).
+- **Langganan (v2.0):** satu frontend untuk semua pelanggan. Setelah login, server lisensi milik penjual menunjukkan backend (Google Drive/Sheets) milik pelanggan itu sendiri. Paket 3 bulan / 6 bulan / Lifetime, 1 fisikawan medis, maksimal 3 RS. Lihat **PANDUAN-PENJUAL.md**; panduan untuk pelanggan ada di **panduan.html**.
 
 ## Struktur
 
@@ -14,7 +15,7 @@ manifest.webmanifest ← identitas aplikasi PWA (nama, ikon, warna)
 sw.js               ← service worker: aplikasi tetap terbuka saat sinyal hilang
 icons/              ← ikon aplikasi (Android, iPhone, favicon)
 css/style.css
-js/config.js        ← isi URL /exec Web App di sini
+js/config.js        ← LISENSI_URL (server lisensi) atau GAS_URL (instalasi tunggal)
 js/bersama.js       ← mesin penilaian & laporan (identik dengan Bersama.gs di backend)
 js/core.js          ← API, penyimpanan lokal, grafik, helper UI
 js/app.js           ← login, shell, router, antrean offline
@@ -23,7 +24,9 @@ js/pwa.js           ← daftar service worker & tombol "Pasang aplikasi"
 js/i18n.js          ← penerjemah antarmuka Indonesia ⇄ English (tombol ID/EN)
 js/i18n-en.js       ← kamus istilah antarmuka berbahasa Inggris
 js/hal-*.js         ← halaman: dasbor, input, riwayat, laporan, kelola, template, pengaturan
+js/lisensi.js       ← langganan: Berlangganan, Pasang, kartu Langganan, banner, Admin Lisensi
 js/demo.js          ← backend tiruan untuk Mode Demo
+panduan.html        ← panduan pemasangan bergambar untuk pelanggan
 js/icons.js         ← subset ikon Lucide (ISC License)
 ```
 

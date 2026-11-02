@@ -6,12 +6,12 @@
  * - Panggilan API Google Apps Script & login Google TIDAK pernah disimpan.
  * Naikkan VERSI bila daftar berkas berubah.
  * ===================================================================== */
-const VERSI = 'verirad-v1.2.0';
+const VERSI = 'verirad-v2.0.0';
 const CACHE_APP = VERSI + '-app', CACHE_FONT = 'verirad-font';
 const ASET = [
   './', 'index.html', 'manifest.webmanifest', 'css/style.css',
   'js/config.js', 'js/icons.js', 'js/bersama.js', 'js/core.js', 'js/editor-foto.js', 'js/pwa.js', 'js/i18n.js', 'js/i18n-en.js', 'js/demo.js',
-  'js/hal-dasbor.js', 'js/hal-input.js', 'js/hal-riwayat.js', 'js/hal-laporan.js', 'js/hal-kelola.js', 'js/hal-template.js', 'js/hal-pengaturan.js', 'js/app.js',
+  'js/hal-dasbor.js', 'js/hal-input.js', 'js/hal-riwayat.js', 'js/hal-laporan.js', 'js/hal-kelola.js', 'js/hal-template.js', 'js/hal-pengaturan.js', 'js/lisensi.js', 'js/app.js', 'panduan.html',
   'icons/icon-192.png', 'icons/icon-512.png', 'icons/maskable-192.png', 'icons/maskable-512.png', 'icons/apple-touch-icon.png', 'icons/favicon-32.png'
 ];
 

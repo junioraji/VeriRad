@@ -12,7 +12,8 @@ daftarHalaman('kelola', {
     if (KelRs !== 'BARU' && (!KelRs || !getRs(KelRs))) KelRs = semua[0] ? semua[0].rs_id : 'BARU';
     const rs = KelRs === 'BARU' ? { rs_id: '', aktif: 'TRUE', jabatan_penandatangan: 'Kepala Instalasi Radiologi' } : getRs(KelRs);
     el.innerHTML = '<div class="page-h"><div><h1>Kelola Rumah Sakit & Alat</h1><p>Rumah sakit yang Anda pegang, penandatangan laporan, email atasan, dan daftar alat radiologi.</p></div>' +
-      '<div class="act"><button class="btn btn-primary" id="rs-baru">' + ic('plus') + 'Tambah rumah sakit</button></div></div>' +
+      '<div class="act"><button class="btn btn-primary" id="rs-baru"' + (rsPenuh() ? ' disabled title="Batas paket ' + batasRs() + ' RS"' : '') + '>' + ic('plus') + 'Tambah rumah sakit</button></div></div>' +
+      (rsPenuh() ? '<div class="banner banner-info small">' + ic('info') + '<div class="t">Batas paket tercapai: <b>' + AppState.rs.length + ' dari ' + batasRs() + ' rumah sakit</b>. Hapus RS yang tidak dipakai lagi untuk menambah yang baru (RS nonaktif tetap dihitung).</div></div>' : '') +
       '<div class="row r-1-2"><div class="list-rs">' + (semua.length ? semua.map(r => {
         const al = AppState.alat.filter(a => a.rs_id === r.rs_id && vrBenar(a.aktif));
         const lap = AppState.laporan.filter(l => l.rs_id === r.rs_id).sort((a, b) => a.waktu < b.waktu ? 1 : -1)[0];
@@ -21,7 +22,7 @@ daftarHalaman('kelola', {
           '<span class="small">' + ic('user') + ' ' + esc(r.nama_penandatangan || '—') + '</span>' +
           '<span class="hstack between small"><span class="muted">' + al.length + ' alat aktif</span><span class="muted">' + (lap ? 'Laporan ' + esc(singkatBulan(lap.periode)) : 'Belum ada laporan') + '</span></span></button>';
       }).join('') : '') +
-      '<button class="btn btn-dashed btn-block" id="rs-baru-2">' + ic('circle-plus') + 'Tambah rumah sakit baru</button></div>' +
+      '<button class="btn btn-dashed btn-block" id="rs-baru-2"' + (rsPenuh() ? ' disabled' : '') + '>' + ic('circle-plus') + (rsPenuh() ? 'Batas paket ' + batasRs() + ' RS tercapai' : 'Tambah rumah sakit baru') + '</button></div>' +
       '<div class="stack"><div class="card" id="rs-form"></div>' + (rs.rs_id ? '<div class="card" id="alat-box"></div>' : '') + '</div></div>';
     $$('[data-rs]', el).forEach(b => b.addEventListener('click', () => { KelRs = b.dataset.rs; Halaman.kelola.render(el); }));
     ['#rs-baru', '#rs-baru-2'].forEach(s => $(s, el).addEventListener('click', () => { KelRs = 'BARU'; Halaman.kelola.render(el); setTimeout(() => $('#f-nama') && $('#f-nama').focus(), 50); }));

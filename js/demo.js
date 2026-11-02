@@ -108,8 +108,15 @@ const Demo = (function () {
       me: { email: me.email, nama: me.nama, peran: me.peran, jabatan: me.jabatan, rs_ids: me.peran === 'FISMED' ? null : String(me.rs_ids).split(',') },
       versi: VR_VERSI, periode: db.periode, hariIni: jkt().slice(0, 10), pengaturan: me.peran === 'FISMED' ? db.pengaturan : { nama_fismed: db.pengaturan.nama_fismed, pemisah_desimal: db.pengaturan.pemisah_desimal },
       rs, alat: db.alat.filter(a => ids.indexOf(a.rs_id) > -1), templates: db.templates, params: db.params, pengguna: me.peran === 'FISMED' ? db.pengguna : [],
-      sesi: db.sesi.filter(s => ids.indexOf(s.rs_id) > -1), sesiDari: '2000-01', laporan: db.laporan.filter(l => ids.indexOf(l.rs_id) > -1)
+      sesi: db.sesi.filter(s => ids.indexOf(s.rs_id) > -1), sesiDari: '2000-01', laporan: db.laporan.filter(l => ids.indexOf(l.rs_id) > -1),
+      lisensi: lisensiDemo()
     };
+  }
+  function lisensiDemo() {
+    if (me.peran !== 'FISMED') return { status: 'AKTIF', boleh_tulis: true };
+    const t = new Date(Date.now() + 150 * 864e5 + 7 * 3600e3).toISOString().slice(0, 10);
+    return { status: 'AKTIF', boleh_tulis: true, pesan: '', paket: '6B', paket_label: '6 bulan', berlaku_sampai: t, sisa_hari: 150, tenggang_sampai: '',
+      batas_rs: 3, batas_fismed: 1, jumlah_rs: db.rs.length, versi_backend: VR_VERSI, versi_terbaru: VR_VERSI, spreadsheet_url: '' };
   }
   function wajibFismed() { if (me.peran !== 'FISMED') throw new Error('Aksi ini hanya untuk fisikawan medis.'); }
 
@@ -149,6 +156,7 @@ const Demo = (function () {
       case 'rs.simpan': {
         if (!String(d.nama || '').trim()) return fail('Nama rumah sakit wajib diisi.');
         const lama = db.rs.find(r => r.rs_id === d.rs_id);
+        if (!lama && db.rs.length >= 3) return fail('Batas paket: maksimal 3 rumah sakit. Hapus rumah sakit yang tidak dipakai lagi untuk menambah yang baru.', { code: 'BATAS_PAKET' });
         const o = Object.assign({}, lama || { rs_id: id('RS'), logo_file_id: '', dibuat: sekarang() }, d, { kode: String(d.kode || '').toUpperCase(), aktif: d.aktif === false ? 'FALSE' : 'TRUE',
           email_atasan: vrDaftarEmail(d.email_atasan).join(', '), email_cc: vrDaftarEmail(d.email_cc).join(', '), diubah: sekarang() });
         if (!o.rs_id) o.rs_id = id('RS');
@@ -201,6 +209,7 @@ const Demo = (function () {
       }
       case 'pengguna.simpan': {
         if (d.email === me.email) return fail('Anda tidak bisa mengubah peran akun Anda sendiri.');
+        if (d.peran === 'FISMED') return fail('Paket VeriRad berlaku untuk 1 fisikawan medis. Tambahkan pengguna lain sebagai Atasan (lihat saja).', { code: 'BATAS_PAKET' });
         const o = { email: d.email, nama: d.nama, jabatan: d.jabatan, peran: d.peran, rs_ids: d.peran === 'ATASAN' ? (d.rs_ids || []).join(',') : '', aktif: d.aktif === false ? 'FALSE' : 'TRUE', dibuat: sekarang() };
         db.pengguna = db.pengguna.filter(u => u.email !== d.email).concat([o]);
         return ok(o, 'Pengguna tersimpan.');
@@ -237,6 +246,8 @@ const Demo = (function () {
       case 'laporan.unduh': return ok({ nama_file: 'demo.pdf', base64: '' });
       case 'laporan.kirimUlang': { const l = db.laporan.find(x => x.laporan_id === d.laporan_id); l.status_kirim = 'TERKIRIM'; l.dikirim_ke = (d.penerima || []).join(', ') || l.dikirim_ke; l.waktu = sekarang(); return ok({ laporan_id: l.laporan_id, status_kirim: 'TERKIRIM', dikirim_ke: l.dikirim_ke }, 'Mode demo: tercatat sebagai terkirim ulang.'); }
       case 'auth.keluarSemua': return ok(null, 'OK');
+      case 'lisensi.segarkan': return ok(lisensiDemo());
+      case 'lisensi.pesan': return fail('Mode demo tidak membuat pesanan sungguhan.');
     }
     return fail('Aksi tidak dikenal di mode demo: ' + action);
   }

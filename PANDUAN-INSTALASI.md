@@ -1,6 +1,9 @@
 # Panduan Instalasi VeriRad
 
-**Smart QC for Safer Radiology** · versi 1.0.0
+> **Versi 2.0 memakai model langganan.** Untuk menjual ke banyak fisikawan medis, ikuti **PANDUAN-PENJUAL.md** (server lisensi + template backend). Pelanggan cukup membaca **panduan.html**.
+> Panduan di bawah ini tetap berlaku untuk bagian yang sama (Client ID OAuth, deploy frontend), dan untuk memahami struktur backend.
+
+**Smart QC for Safer Radiology** · versi 1.0.0 (instalasi tunggal)
 
 VeriRad terdiri dari tiga bagian. Pasang berurutan:
 

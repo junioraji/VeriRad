@@ -408,3 +408,88 @@ I18N.pola.unshift(
   [/^Edit foto · (.+)$/, 'Edit photo · $1'], [/^Warna (#[0-9A-Fa-f]{6})$/, 'Colour $1'],
   [/^(\d+) × (\d+) px( · diedit)?$/, (m, a, b, d) => a + ' × ' + b + ' px' + (d ? ' · edited' : '')]
 );
+
+/* ---------- v2.0: langganan, pasang, batas paket, rentang riwayat, menu atasan ---------- */
+Object.assign(I18N.kamus, {
+  // login & halaman langganan
+  'Fisikawan medis: masuk untuk berlangganan atau memasang VeriRad. Atasan: masuk dengan email yang ditautkan fisikawan medis Anda.':
+    'Medical physicists: sign in to subscribe or install VeriRad. Supervisors: sign in with the email your medical physicist linked.',
+  'Isi LISENSI_URL atau GAS_URL di': 'Fill in LISENSI_URL or GAS_URL in', 'Memeriksa langganan…': 'Checking subscription…',
+  'Menghubungkan ke data Anda…': 'Connecting to your data…', 'Email Anda belum ditautkan oleh fisikawan medis.': 'Your email has not been linked by a medical physicist.',
+  'Kembali ke aplikasi': 'Back to app', 'Berlangganan': 'Subscribe', 'Berlangganan VeriRad': 'Subscribe to VeriRad', 'Perpanjang langganan VeriRad': 'Renew your VeriRad subscription',
+  'Akun': 'Account', 'belum punya langganan. Pilih paket, transfer, lalu pasang sekali saja.': 'has no subscription yet. Choose a plan, transfer, then install once.',
+  'Akun Anda dinonaktifkan. Hubungi penjual bila ini keliru.': 'Your account has been deactivated. Contact the seller if this is a mistake.',
+  'Paling hemat': 'Best value', '3 bulan': '3 months', '6 bulan': '6 months', 'Lifetime': 'Lifetime', '6 bulan (demo)': '6 months (demo)',
+  'Sekali bayar, berlaku selamanya': 'One-time payment, valid forever', '1 fisikawan medis': '1 medical physicist',
+  'Atasan/kepala instalasi tidak dibatasi': 'Unlimited supervisors/heads of department', 'Semua fitur: input QC, grafik, foto, laporan PDF ke email': 'All features: QC entry, charts, photos, PDF reports by email',
+  'Data QC tersimpan di Google Drive akun Anda sendiri': 'QC data is stored in your own Google Drive',
+  'Menunggu pembayaran': 'Awaiting payment', 'Paket': 'Plan', 'Transfer tepat': 'Transfer exactly', 'Salin': 'Copy', 'Salin no.': 'Copy no.', 'Disalin': 'Copied',
+  'Ke rekening': 'To account', 'Nomor rekening akan dikirim lewat WhatsApp.': 'The account number will be sent via WhatsApp.',
+  'Transfer': 'Transfer', 'ke salah satu rekening di atas.': 'to one of the accounts above.', 'Kirim bukti transfer lewat WhatsApp.': 'Send the transfer receipt via WhatsApp.',
+  'Setelah dikonfirmasi (biasanya kurang dari 1×24 jam), klik': 'Once confirmed (usually within 24 hours), click', 'Periksa status': 'Check status',
+  'Kirim bukti via WhatsApp': 'Send receipt via WhatsApp', 'Ganti paket': 'Change plan',
+  'Anda atasan / kepala instalasi?': 'Are you a supervisor / head of department?',
+  'Atasan tidak perlu berlangganan. Minta fisikawan medis Anda menambahkan email ini di VeriRad (Pengaturan → Tautkan atasan), lalu masuk lagi.':
+    'Supervisors do not need a subscription. Ask your medical physicist to add this email in VeriRad (Settings → Link supervisor), then sign in again.',
+  'Ingin mencoba dulu?': 'Want to try first?', 'Mode Demo memakai data contoh di browser ini, tanpa berlangganan.': 'Demo Mode uses sample data in this browser, no subscription needed.',
+  'Buka Mode Demo': 'Open Demo Mode', 'Buka Admin Lisensi': 'Open License Admin', 'Admin Lisensi': 'License Admin',
+  'Pembayaran dikonfirmasi. Langganan aktif!': 'Payment confirmed. Subscription active!', 'Pembayaran belum dikonfirmasi. Coba lagi nanti.': 'Payment not confirmed yet. Please try again later.',
+  'Sesi berakhir, silakan masuk lagi.': 'Session ended, please sign in again.', 'Harga': 'Price', 'Nama lengkap': 'Full name', 'Nomor WhatsApp': 'WhatsApp number',
+  'Untuk konfirmasi pembayaran dan bantuan pemasangan.': 'For payment confirmation and installation help.',
+  'Setelah ini Anda mendapat nominal transfer (dengan kode unik) dan nomor rekening.': 'Next you will get the transfer amount (with a unique code) and the account number.',
+  'Lanjut ke pembayaran': 'Continue to payment', 'mis. Andi Pratama, S.Si.': 'e.g. Andi Pratama, S.Si.',
+  // pasang
+  'Pasang VeriRad': 'Install VeriRad', 'Panduan bergambar': 'Illustrated guide',
+  'Pemasangan jauh lebih mudah dari laptop/PC. Setelah terpasang, VeriRad bisa dipakai penuh di HP.': 'Installing is much easier on a laptop/PC. Once installed, VeriRad works fully on your phone.',
+  'Kode aktivasi Anda': 'Your activation code', 'Dipakai di langkah 3. Berlaku 48 jam.': 'Used in step 3. Valid for 48 hours.', 'Salin kode': 'Copy code', 'Kode baru': 'New code',
+  'Menunggu aktivasi…': 'Waiting for activation…', 'Halaman ini lanjut otomatis begitu langkah 3 selesai.': 'This page continues automatically once step 3 is done.',
+  'Periksa sekarang': 'Check now', 'Kode aktivasi baru dibuat. Kode lama tidak berlaku.': 'New activation code created. The old code no longer works.',
+  'Penjual belum mengisi TEMPLATE_URL di server lisensi.': 'The seller has not set TEMPLATE_URL on the license server yet.',
+  'VeriRad berhasil diaktifkan!': 'VeriRad activated successfully!', 'Belum aktif. Selesaikan langkah 3 di panel spreadsheet.': 'Not active yet. Finish step 3 in the spreadsheet panel.',
+  'Pilih data': 'Choose data', 'Pilih data yang ingin dibuka': 'Choose the data to open', 'Email Anda ditautkan oleh lebih dari satu fisikawan medis.': 'Your email is linked by more than one medical physicist.',
+  // langganan di aplikasi
+  'Langganan': 'Subscription', 'Berlaku sampai': 'Valid until', 'Selamanya': 'Forever', 'batas paket': 'plan limit', 'atasan tidak dibatasi': 'unlimited supervisors',
+  'Versi backend': 'Backend version', 'Perpanjang / ganti paket': 'Renew / change plan', 'Buka spreadsheet data': 'Open data spreadsheet', 'Cara memperbarui': 'How to update',
+  'Perpanjang': 'Renew', 'Perpanjang langganan': 'Renew subscription', 'Mode baca saja': 'Read-only mode', 'Mode baca saja.': 'Read-only mode.',
+  'Masa aktif baru ditambahkan setelah tanggal berakhir saat ini, jadi tidak ada hari yang hilang.': 'The new period is added after your current end date, so no days are lost.',
+  'Setelah dikonfirmasi, buka Pengaturan → Langganan →': 'Once confirmed, open Settings → Subscription →',
+  'Semua data tetap aman dan bisa dilihat, diekspor CSV, dan laporan lama bisa diunduh.': 'All data stays safe and can be viewed, exported to CSV, and past reports downloaded.',
+  'Di Mode Demo tidak ada pembayaran sungguhan.': 'There are no real payments in Demo Mode.', 'Mode demo tidak membuat pesanan sungguhan.': 'Demo mode does not create real orders.',
+  'Memperbarui backend': 'Updating the backend', 'Buka': 'Open', 'spreadsheet data VeriRad': 'VeriRad data spreadsheet', 'Anda di laptop': 'on your laptop', 'buka': 'open',
+  'Klik menu': 'Click the menu', 'VeriRad → Perbarui backend': 'VeriRad → Perbarui backend', '→ OK.': '→ OK.', 'Pertama kali, Anda diminta menyalakan': 'The first time, you will be asked to turn on',
+  ', lalu ulangi langkah 2.': ', then repeat step 2.', 'Muat ulang VeriRad di browser/HP.': 'Reload VeriRad in your browser/phone.', 'Data Anda tidak berubah saat memperbarui.': 'Your data does not change when updating.',
+  'Panduan aktivasi': 'Activation guide', 'Langganan lewat jatuh tempo.': 'Subscription past due.', 'Pembaruan backend': 'Backend update', 'tersedia.': 'available.',
+  'Langganan berakhir dalam': 'Subscription ends in', 'Masa tenggang': 'Grace period', 'Berakhir': 'Ended', 'Dinonaktifkan': 'Deactivated', 'Belum berlangganan': 'Not subscribed',
+  'Belum diaktifkan': 'Not activated', 'Perlu aktivasi ulang': 'Needs re-activation', 'Server lisensi tak terjangkau': 'License server unreachable',
+  'Langganan VeriRad berakhir. Data tetap bisa dilihat dan diunduh; perpanjang di Pengaturan → Langganan untuk mengisi QC lagi.':
+    'Your VeriRad subscription has ended. Data can still be viewed and downloaded; renew in Settings → Subscription to enter QC again.',
+  'VeriRad belum diaktifkan. Buka spreadsheet VeriRad → menu VeriRad → Aktifkan VeriRad.': 'VeriRad is not activated yet. Open the VeriRad spreadsheet → VeriRad menu → Aktifkan VeriRad.',
+  'Akun VeriRad dinonaktifkan oleh penjual. Hubungi penjual.': 'This VeriRad account was deactivated by the seller. Please contact the seller.',
+  'Server lisensi sedang tidak bisa dihubungi. Aplikasi tetap berjalan.': 'The license server cannot be reached right now. The app keeps working.',
+  'Lisensi backend ini tidak dikenali lagi (mungkin dipasang ulang). Aktifkan ulang dari menu VeriRad di spreadsheet.': 'This backend licence is no longer recognised (it may have been reinstalled). Re-activate from the VeriRad menu in the spreadsheet.',
+  'Langganan, profil fisikawan medis, tanda tangan laporan, dan siapa saja yang boleh membuka VeriRad.': 'Subscription, medical physicist profile, report signature and who may open VeriRad.',
+  'Atasan masuk dengan akun Google-nya sendiri di alamat aplikasi yang sama dan hanya melihat Dasbor serta Riwayat & Tren RS yang dicentang. Paket VeriRad: 1 fisikawan medis, atasan tidak dibatasi.':
+    'Supervisors sign in with their own Google account at the same app address and only see the Dashboard and History & Trends of the ticked hospitals. VeriRad plan: 1 medical physicist, unlimited supervisors.',
+  'Atasan hanya melihat Dasbor dan Riwayat & Tren untuk RS yang dicentang.': 'Supervisors only see the Dashboard and History & Trends for the ticked hospitals.',
+  'Fisikawan medis — paket hanya untuk 1 orang': 'Medical physicist — plan covers 1 person only',
+  'Paket VeriRad berlaku untuk 1 fisikawan medis. Tambahkan pengguna lain sebagai Atasan (lihat saja).': 'A VeriRad plan covers 1 medical physicist. Add other users as Supervisors (view only).',
+  // batas RS
+  'Batas paket tercapai:': 'Plan limit reached:', '. Hapus RS yang tidak dipakai lagi untuk menambah yang baru (RS nonaktif tetap dihitung).': '. Delete a hospital you no longer use to add a new one (inactive hospitals still count).',
+  'Lihat Riwayat & Tren': 'View History & Trends', 'Membuat pesanan…': 'Creating order…', 'Data QC di perangkat ini disimpan dulu dan dikirim otomatis setelah langganan diperpanjang.': 'QC data on this device is kept and sent automatically once the subscription is renewed.', 'Memeriksa…': 'Checking…', 'Pilih bulan': 'Choose months', 'Dari bulan': 'From month', 'Sampai bulan': 'To month', 's.d.': 'to'
+});
+I18N.pola.unshift(
+  [/^Langganan Anda berakhir (.+)\. Pilih paket untuk melanjutkan\.$/, (m, t) => 'Your subscription ended on ' + tr(t) + '. Choose a plan to continue.'],
+  [/^Hemat (\d+)%$/, 'Save $1%'], [/^≈ (Rp[\d.]+) per bulan$/, '≈ $1 per month'],
+  [/^Pilih (3 bulan|6 bulan|Lifetime)$/, (m, p) => 'Choose ' + tr(p)], [/^Pesan paket (.+)$/, (m, p) => 'Order the ' + tr(p) + ' plan'],
+  [/^Maksimal (\d+) rumah sakit$/, 'Up to $1 hospitals'], [/^tepat (Rp[\d.]+)$/, 'exactly $1'],
+  [/^3 digit terakhir \((\d+)\) adalah kode unik agar pembayaran Anda mudah dikenali\.$/, 'The last 3 digits ($1) are a unique code so your payment is easy to identify.'],
+  [/^sisa (\d+) hari$/, '$1 days left'], [/^lewat (\d+) hari$/, '$1 days overdue'], [/^(\d+) hari$/, '$1 days'],
+  [/^(\d+) bulan$/, (m, n) => n + (n === '1' ? ' month' : ' months')],
+  [/^(\d+) dari (\d+) rumah sakit$/, '$1 of $2 hospitals'], [/^Batas paket (\d+) RS tercapai$/, 'Plan limit of $1 hospitals reached'], [/^Batas paket (\d+) RS$/, 'Plan limit: $1 hospitals'],
+  [/^Batas paket: maksimal (\d+) rumah sakit\. Hapus rumah sakit yang tidak dipakai lagi untuk menambah yang baru\.$/, 'Plan limit: up to $1 hospitals. Delete a hospital you no longer use to add a new one.'],
+  [/^Masa tenggang sampai (.+)\.$/, (m, t) => 'Grace period until ' + tr(t) + '.'],
+  [/^Langganan sudah lewat jatuh tempo\. Masa tenggang sampai (.+), setelah itu aplikasi menjadi baca saja\.$/, (m, t) => 'Subscription is past due. Grace period until ' + tr(t) + ', after which the app becomes read-only.'],
+  [/^\((.+)\)\.$/, (m, t) => '(' + tr(t) + ').'], [/^Status: (.+)$/, (m, s) => 'Status: ' + tr(s)], [/^Disalin: (.+)$/, 'Copied: $1'],
+  [/^Paket VeriRad berlaku untuk 1 fisikawan medis \((.+)\)\. Akun ini hanya bisa ditambahkan sebagai atasan\.$/, 'A VeriRad plan covers 1 medical physicist ($1). This account can only be added as a supervisor.'],
+  [/^v([\d.]+) tersedia$/, 'v$1 available']
+);
