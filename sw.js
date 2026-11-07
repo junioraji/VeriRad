@@ -6,13 +6,13 @@
  * - Panggilan API Google Apps Script & login Google TIDAK pernah disimpan.
  * Naikkan VERSI bila daftar berkas berubah.
  * ===================================================================== */
-const VERSI = 'verirad-v3.0.4';
+const VERSI = 'verirad-v3.0.5';
 const CACHE_APP = VERSI + '-app', CACHE_FONT = 'verirad-font';
 const ASET = [
   './', 'index.html', 'manifest.webmanifest', 'css/style.css',
   'js/config.js', 'js/icons.js', 'js/bersama.js', 'js/core.js', 'js/google.js', 'js/drive.js', 'js/mesin-kode.js', 'js/mesin.js', 'js/atasan.js', 'js/editor-foto.js', 'js/pwa.js', 'js/i18n.js', 'js/i18n-en.js', 'js/demo.js',
   'js/hal-dasbor.js', 'js/hal-input.js', 'js/hal-riwayat.js', 'js/hal-laporan.js', 'js/hal-kelola.js', 'js/hal-template.js', 'js/hal-pengaturan.js', 'js/lisensi.js', 'js/app.js', 'panduan.html', 'privasi.html', 'js/vendor/html2pdf.bundle.min.js',
-  'icons/icon-192-v3.png', 'icons/icon-512-v3.png', 'icons/maskable-192-v3.png', 'icons/maskable-512-v3.png', 'icons/apple-touch-icon-v3.png', 'icons/favicon-32-v3.png'
+  'icons/icon-192-v3o.png', 'icons/icon-512-v3o.png', 'icons/maskable-192-v3o.png', 'icons/maskable-512-v3o.png', 'icons/apple-touch-icon-v3o.png', 'icons/favicon-32-v3o.png'
 ];
 
 self.addEventListener('install', e => {
