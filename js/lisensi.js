@@ -12,7 +12,15 @@ const Lis = {
   simpan(d) { this.data = d; Store.set('lis', { sesi: d.sesi || (this.sesi() || {}).sesi, email: d.email, admin: !!d.admin, exp: Date.now() + 11.5 * 3600e3 }); },
   lupa() { this.data = null; this.idToken = ''; Store.del('lis'); this.henti(); },
   henti() { if (this._poll) { clearInterval(this._poll); this._poll = null; } },
-  async panggil(aksi, data, sesi) {
+  async panggil(aksi, data, sesi, ulang) {
+    const r = await this._panggil(aksi, data, sesi);
+    if (!r.success && r.data && r.data.code === 'AUTH' && !ulang && aksi !== 'masuk' && window.modeRelay && modeRelay() && GAuth.valid()) {   // sesi relay habis → masuk ulang diam-diam
+      const m = await this._panggil('masuk', { at: GAuth.tok.at, versi: VR_VERSI });
+      if (m.success) { this.simpan(m.data); return this.panggil(aksi, data, '', true); }
+    }
+    return r;
+  },
+  async _panggil(aksi, data, sesi) {
     try {
       const res = await fetch(LISENSI_URL, {
         method: 'POST', redirect: 'follow', cache: 'no-store', headers: { 'Content-Type': 'text/plain;charset=utf-8' },
@@ -58,6 +66,7 @@ async function masukLisensi(idToken) {
   Lis.idToken = idToken;
   return lanjutLisensi(r.data);
 }
+function lanjutLis(d) { return modeRelay() ? lanjutRelay(d) : lanjutLisensi(d); }
 function lanjutLisensi(d) {
   Lis.simpan(d);
   const p = d.pelanggan;
@@ -86,7 +95,7 @@ function halamanLisensi(judul, isi, opsi) {
   const s = Lis.sesi();
   $('#app').classList.remove('is-demo');
   $('#app').innerHTML = '<div class="lis-page"><header class="lis-top">' +
-    '<div class="brand" style="padding:0;border:0"><div class="logo">' + ic('shield-check') + '</div><div><b>VeriRad</b><span>Smart QC Radiologi</span></div></div>' +
+    '<div class="brand" style="padding:0;border:0"><div class="logo">' + logoVR() + '</div><div><b>Veri<em>Rad</em></b><span>Smart QC Radiologi</span></div></div>' +
     '<div class="sp"></div>' + tombolBahasa('lis-lang') +
     (s ? '<span class="small mono hide-sm lis-email">' + esc(s.email) + '</span>' : '') +
     (opsi.kembali ? '<button class="btn btn-sm btn-on-dark" id="lis-kembali">' + ic('arrow-left') + '<span>Kembali ke aplikasi</span></button>' :
@@ -95,7 +104,7 @@ function halamanLisensi(judul, isi, opsi) {
   const k = $('#lis-keluar'); if (k) k.addEventListener('click', () => keluar(false));
   const kb = $('#lis-kembali'); if (kb) kb.addEventListener('click', () => {
     if (AppState.me) { history.replaceState(null, '', '#/dasbor'); renderShell(); rute(); }
-    else { history.replaceState(null, '', location.pathname + location.search); if (Lis.data && Lis.sesi()) lanjutLisensi(Lis.data); else renderLogin(); }
+    else { history.replaceState(null, '', location.pathname + location.search); if (Lis.data && Lis.sesi()) lanjutLis(Lis.data); else renderLogin(); }
   });
   window.scrollTo(0, 0);
 }
@@ -138,18 +147,19 @@ async function renderBeli(d) {
     '<div class="page-h"><div><h1>' + (habis ? 'Perpanjang langganan VeriRad' : 'Berlangganan VeriRad') + '</h1><p>' +
     (p && p.status === 'NONAKTIF' ? 'Akun Anda dinonaktifkan. Hubungi penjual bila ini keliru.' :
       habis ? 'Langganan Anda berakhir ' + esc(tglIndo(p.berlaku_sampai)) + '. Pilih paket untuk melanjutkan.' :
-        'Akun <b class="mono">' + esc((d && d.email) || '') + '</b> belum punya langganan. Pilih paket, transfer, lalu pasang sekali saja.') + '</p></div></div>' +
+        'Akun <b class="mono">' + esc((d && d.email) || '') + '</b> belum punya langganan. Pilih paket, transfer, lalu ' + (modeRelay() ? 'langsung pakai — tanpa pemasangan.' : 'pasang sekali saja.')) + '</p></div></div>' +
     (!cfgR.success && !cfg.paket ? '<div class="banner banner-fail">' + ic('circle-x') + '<div class="t">' + esc(cfgR.message) + '</div></div>' : '') +
     (pes ? kartuBayar(pes, cfg.bayar, d.email) + '<div class="hstack" style="justify-content:center;gap:8px;margin:4px 0 24px"><button class="btn btn-primary" id="cek-status">' + ic('refresh-cw') + 'Periksa status</button><button class="btn btn-ghost" id="ganti-paket">Ganti paket</button></div>' : '') +
     '<div id="pilih-paket"' + (pes ? ' class="hidden"' : '') + '>' + kartuPaket(cfg, pes && pes.paket) + '</div>' +
     '<div class="row r-1-1" style="margin-top:8px">' +
-    '<div class="card card-b small"><b>' + ic('eye') + ' Anda atasan / kepala instalasi?</b><p class="muted" style="margin:6px 0 0">Atasan tidak perlu berlangganan. Minta fisikawan medis Anda menambahkan email ini di VeriRad (Pengaturan → Tautkan atasan), lalu masuk lagi.</p></div>' +
+    '<div class="card card-b small"><b>' + ic('eye') + ' Anda atasan / kepala instalasi?</b><p class="muted" style="margin:6px 0 0">' + (modeRelay() ? 'Atasan tidak perlu berlangganan maupun masuk. Minta fisikawan medis Anda mengirim <b>tautan atasan</b> (Pengaturan → Pengguna → Tautan), lalu buka tautan itu.' :
+      'Atasan tidak perlu berlangganan. Minta fisikawan medis Anda menambahkan email ini di VeriRad (Pengaturan → Tautkan atasan), lalu masuk lagi.') + '</p></div>' +
     '<div class="card card-b small"><b>' + ic('flask-conical') + ' Ingin mencoba dulu?</b><p class="muted" style="margin:6px 0 8px">Mode Demo memakai data contoh di browser ini, tanpa berlangganan.</p><button class="btn btn-sm" id="coba-demo">Buka Mode Demo</button></div></div>' +
     (d && d.admin ? '<div style="text-align:center;margin-top:16px"><a class="btn btn-ghost" href="#/admin">' + ic('shield-check') + 'Buka Admin Lisensi</a></div>' : ''), { ulang: () => renderBeli(d) });
   $$('[data-salin]').forEach(b => b.addEventListener('click', () => salinTeks(b.dataset.salin, b)));
   $('#coba-demo').addEventListener('click', () => mulaiDemo('FISMED'));
   const gp = $('#ganti-paket'); if (gp) gp.addEventListener('click', () => { $('#pilih-paket').classList.remove('hidden'); $('#pilih-paket').scrollIntoView({ behavior: 'smooth' }); });
-  const cs = $('#cek-status'); if (cs) cs.addEventListener('click', async () => { setBusy(cs, true, 'Memeriksa…'); const r = await Lis.panggil('status'); setBusy(cs, false); if (!r.success) return gagalLis(r); if (r.data.pelanggan && ['AKTIF', 'TENGGANG'].indexOf(r.data.pelanggan.status) > -1) { toast('Pembayaran dikonfirmasi. Langganan aktif!', 'success'); return lanjutLisensi(r.data); } toast('Pembayaran belum dikonfirmasi. Coba lagi nanti.', 'info'); });
+  const cs = $('#cek-status'); if (cs) cs.addEventListener('click', async () => { setBusy(cs, true, 'Memeriksa…'); const r = await Lis.panggil('status'); setBusy(cs, false); if (!r.success) return gagalLis(r); if (r.data.pelanggan && ['AKTIF', 'TENGGANG'].indexOf(r.data.pelanggan.status) > -1) { toast('Pembayaran dikonfirmasi. Langganan aktif!', 'success'); return lanjutLis(Object.assign({}, Lis.data || {}, r.data)); } toast('Pembayaran belum dikonfirmasi. Coba lagi nanti.', 'info'); });
   $$('[data-paket]').forEach(b => b.addEventListener('click', () => modalPesan(b.dataset.paket, d)));
 }
 function gagalLis(r) { if (r.data && r.data.code === 'AUTH') { toast('Sesi berakhir, silakan masuk lagi.', 'warning'); Lis.lupa(); return renderLogin(); } toast(r.message, 'error'); }
@@ -160,6 +170,7 @@ function modalPesan(kode, d) {
     isi: '<div class="stack"><div class="hstack between"><span class="muted">Harga</span><b class="mono">' + esc(rupiah(pk.harga)) + '</b></div>' +
       '<div class="field"><label for="ps-nama">Nama lengkap</label><input class="input" id="ps-nama" placeholder="mis. Andi Pratama, S.Si." value="' + esc((d && d.nama_google) || '') + '"></div>' +
       '<div class="field"><label for="ps-wa">Nomor WhatsApp</label><input class="input mono" id="ps-wa" inputmode="tel" placeholder="08…"><span class="hint">Untuk konfirmasi pembayaran dan bantuan pemasangan.</span></div>' +
+      '<p class="hint" style="margin:0">Dengan memesan, Anda menyetujui <a href="privasi.html" target="_blank" rel="noopener">Kebijakan Privasi</a> VeriRad.</p>' +
       '<p class="small muted" style="margin:0">Setelah ini Anda mendapat nominal transfer (dengan kode unik) dan nomor rekening.</p></div>',
     tombol: [{ label: 'Batal' }, { label: 'Lanjut ke pembayaran', kelas: 'btn-primary', ikon: 'arrow-right', aksi: async (bg) => {
       const r = await Lis.panggil('pesan', { paket: kode, nama: $('#ps-nama', bg).value, wa: $('#ps-wa', bg).value });
@@ -302,13 +313,15 @@ function kartuLangganan() {
     (!life && L.sisa_hari !== null && L.sisa_hari !== undefined ? '<span class="small muted">' + (L.sisa_hari >= 0 ? 'sisa ' + L.sisa_hari + ' hari' : 'lewat ' + (-L.sisa_hari) + ' hari') + '</span>' : '') + '</div>' +
     '<div><span class="lbl">Rumah sakit</span><b class="mono">' + AppState.rs.length + ' / ' + batasRs() + '</b><span class="small muted">batas paket</span></div>' +
     '<div><span class="lbl">Fisikawan medis</span><b class="mono">1 / ' + esc(L.batas_fismed || 1) + '</b><span class="small muted">atasan tidak dibatasi</span></div>' +
-    '<div><span class="lbl">Versi backend</span><b class="mono">' + esc(L.versi_backend || VR_VERSI) + '</b>' + (update ? '<span class="small" style="color:var(--orange-text)">v' + esc(L.versi_terbaru) + ' tersedia</span>' : '') + '</div></div>' +
+    (modeRelay() && !AppState.demo ? '<div><span class="lbl">Penyimpanan data</span><b>Google Drive Anda</b><span class="small muted">folder VeriRad</span></div></div>' :
+      '<div><span class="lbl">Versi backend</span><b class="mono">' + esc(L.versi_backend || VR_VERSI) + '</b>' + (update ? '<span class="small" style="color:var(--orange-text)">v' + esc(L.versi_terbaru) + ' tersedia</span>' : '') + '</div></div>') +
     (L.pesan ? '<div class="banner ' + (L.boleh_tulis === false ? 'banner-fail' : 'banner-warn') + ' small" style="margin-top:12px">' + ic('info') + '<div class="t">' + esc(L.pesan) + '</div></div>' : '') +
     '</div><div class="card-f" style="justify-content:flex-start;flex-wrap:wrap">' +
     (life ? '' : '<button class="btn btn-primary" data-perpanjang>' + ic('receipt') + 'Perpanjang / ganti paket</button>') +
     '<button class="btn" id="lis-segar">' + ic('refresh-cw') + 'Periksa status</button>' +
     (update ? '<button class="btn" data-cara-perbarui>' + ic('cloud-upload') + 'Cara memperbarui</button>' : '') +
     (L.spreadsheet_url ? '<a class="btn btn-ghost" target="_blank" rel="noopener" href="' + esc(L.spreadsheet_url) + '">' + ic('table-2') + 'Buka spreadsheet data</a>' : '') +
+    (L.folder_url ? '<a class="btn btn-ghost" target="_blank" rel="noopener" href="' + esc(L.folder_url) + '">' + ic('folder-open') + 'Buka folder Drive</a>' : '') +
     ((Lis.sesi() || {}).admin ? '<a class="btn btn-ghost" href="#/admin">' + ic('shield-check') + 'Admin Lisensi</a>' : '') + '</div></div>';
 }
 function pasangKartuLangganan(el) {
@@ -371,13 +384,16 @@ window.onLisensiDitolak = function (res) {
  * ===================================================================== */
 const ADM = { tab: 'pesanan', cari: '', filter: '', data: null };
 async function renderAdmin() {
-  if (!modeLisensi()) { halamanLisensi('Admin Lisensi', kosong('Mode lisensi belum aktif', 'Isi LISENSI_URL di js/config.js.'), { kembali: true }); return; }
+  if (!modeLisensi() && !modeRelay()) { halamanLisensi('Admin Lisensi', kosong('Mode lisensi belum aktif', 'Isi RELAY_URL di js/config.js.'), { kembali: true }); return; }
   const s = Lis.sesi();
   if (!s) {
     halamanLisensi('Admin Lisensi', '<div class="card card-b" style="max-width:420px;margin:40px auto;text-align:center"><h2>Masuk sebagai admin</h2><p class="muted">Sesi admin berakhir. Masuk dengan akun Google admin.</p>' +
       '<div id="gbtn" class="gbtn-wrap"></div><div id="login-msg"></div></div>', { kembali: true });
     window.__setelahMasukLisensi = d => { window.__setelahMasukLisensi = null; Lis.simpan(d); renderAdmin(); };
-    pasangGoogle();
+    if (modeRelay()) {
+      $('#gbtn').innerHTML = '<button class="btn btn-primary btn-block" id="btn-masuk-g">' + ic('log-in') + 'Masuk dengan Google</button>';
+      $('#btn-masuk-g').addEventListener('click', e => masukRelay(e.currentTarget, 'select_account'));
+    } else pasangGoogle();
     return;
   }
   if (!s.admin) { halamanLisensi('Admin Lisensi', kosong('Khusus admin', 'Akun ' + s.email + ' bukan admin lisensi.'), { kembali: true }); return; }
@@ -390,7 +406,7 @@ async function renderAdmin() {
 function gambarAdmin() {
   const d = ADM.data, rg = d.ringkasan;
   const main = $('.lis-main');
-  main.innerHTML = '<div class="page-h"><div><h1>Admin Lisensi</h1><p>Pesanan, pelanggan, pembayaran via rekening, dan rilis backend.</p></div>' +
+  main.innerHTML = '<div class="page-h"><div><h1>Admin Lisensi</h1><p>' + (d.rilis ? 'Pesanan, pelanggan, pembayaran via rekening, dan rilis backend.' : 'Pesanan, pelanggan, dan pembayaran via rekening. Data QC pelanggan tetap di Google Drive mereka.') + '</p></div>' +
     '<div class="act"><button class="btn" id="adm-segar">' + ic('refresh-cw') + 'Muat ulang</button><button class="btn btn-primary" id="adm-tambah">' + ic('user-plus') + 'Tambah / aktifkan manual</button></div></div>' +
     (d.belum_diisi.length ? '<div class="banner banner-warn">' + ic('triangle-alert') + '<div class="t small"><b>Script Properties server lisensi belum lengkap:</b> ' + esc(d.belum_diisi.join(', ')) + '</div></div>' : '') +
     '<div class="row r-kpi">' +
@@ -398,12 +414,13 @@ function gambarAdmin() {
     kpi('Akan habis ≤14 hari', rg.akan_habis, '', 'calendar-days', rg.habis + ' sudah berakhir', rg.akan_habis ? 'is-warn' : '') +
     kpi('Menunggu bayar', rg.menunggu, '', 'clock', 'pesanan terbuka', rg.menunggu ? 'is-warn' : '') +
     kpi('Pendapatan bulan ini', rupiah(rg.pendapatan_bulan), '', 'receipt', 'total ' + esc(rupiah(rg.pendapatan_total))) + '</div>' +
-    '<div class="tabs" role="tablist">' + [['pesanan', 'Pesanan', rg.menunggu], ['pelanggan', 'Pelanggan', rg.total], ['bayar', 'Pembayaran', d.pembayaran.length], ['rilis', 'Rilis backend', d.rilis.length]]
+    '<div class="tabs" role="tablist">' + [['pesanan', 'Pesanan', rg.menunggu], ['pelanggan', 'Pelanggan', rg.total], ['bayar', 'Pembayaran', d.pembayaran.length]].concat(d.rilis ? [['rilis', 'Rilis backend', d.rilis.length]] : [])
       .map(t => '<button role="tab" data-tab="' + t[0] + '" aria-selected="' + (ADM.tab === t[0]) + '">' + t[1] + ' <span class="cnt">' + t[2] + '</span></button>').join('') + '</div>' +
     '<div id="adm-isi" class="stack"></div>';
   $('#adm-segar').addEventListener('click', () => renderAdmin());
   $('#adm-tambah').addEventListener('click', () => modalAdmAktifkan(null));
   $$('[data-tab]', main).forEach(b => b.addEventListener('click', () => { ADM.tab = b.dataset.tab; gambarAdmin(); }));
+  if (ADM.tab === 'rilis' && !d.rilis) ADM.tab = 'pesanan';
   ({ pesanan: tabPesanan, pelanggan: tabPelanggan, bayar: tabBayar, rilis: tabRilis })[ADM.tab]($('#adm-isi'));
 }
 async function admAksi(aksi, data, btn) {
@@ -436,19 +453,20 @@ function tabPesanan(box) {
 }
 function tabPelanggan(box) {
   const d = ADM.data;
-  const F = [['', 'Semua'], ['AKTIF', 'Aktif'], ['TENGGANG', 'Tenggang'], ['HABIS', 'Berakhir'], ['LIFE', 'Lifetime'], ['BELUMPASANG', 'Belum pasang'], ['NONAKTIF', 'Nonaktif']];
+  const v3 = !d.rilis;
+  const F = [['', 'Semua'], ['AKTIF', 'Aktif'], ['TENGGANG', 'Tenggang'], ['HABIS', 'Berakhir'], ['LIFE', 'Lifetime'], ['BELUMPASANG', v3 ? 'Belum pernah masuk' : 'Belum pasang'], ['NONAKTIF', 'Nonaktif']];
   box.innerHTML = '<div class="card card-b"><div class="filters" style="align-items:flex-end"><div class="field" style="flex:1;min-width:220px"><label for="adm-cari">Cari</label><input class="input" id="adm-cari" placeholder="email, nama, WA…" value="' + esc(ADM.cari) + '"></div>' +
     '<div class="hstack">' + F.map(f => '<button class="chip" data-f="' + f[0] + '" aria-pressed="' + (ADM.filter === f[0]) + '">' + f[1] + '</button>').join('') + '</div></div></div>' +
-    '<div class="card"><div class="tbl-wrap"><table class="tbl"><thead><tr><th>Pelanggan</th><th>Paket</th><th class="c">Status</th><th>Berlaku</th><th>Backend</th><th></th></tr></thead><tbody id="adm-tb"></tbody></table></div></div>';
+    '<div class="card"><div class="tbl-wrap"><table class="tbl"><thead><tr><th>Pelanggan</th><th>Paket</th><th class="c">Status</th><th>Berlaku</th><th>' + (v3 ? 'Pemakaian' : 'Backend') + '</th><th></th></tr></thead><tbody id="adm-tb"></tbody></table></div></div>';
   const isi = () => {
     const q = ADM.cari.toLowerCase();
     const rows = d.pelanggan.filter(p => (!q || [p.email, p.nama, p.wa, p.catatan].join(' ').toLowerCase().indexOf(q) > -1) &&
-      (!ADM.filter || (ADM.filter === 'LIFE' ? p.paket === 'LIFE' : ADM.filter === 'BELUMPASANG' ? !p.terpasang : p.status === ADM.filter)))
+      (!ADM.filter || (ADM.filter === 'LIFE' ? p.paket === 'LIFE' : ADM.filter === 'BELUMPASANG' ? (v3 ? !p.terakhir_masuk : !p.terpasang) : p.status === ADM.filter)))
       .sort((a, b) => (a.berlaku_sampai || '9999') < (b.berlaku_sampai || '9999') ? -1 : 1);
     $('#adm-tb', box).innerHTML = rows.map(p => '<tr><td><b>' + esc(p.nama || '—') + '</b><span class="sub mono">' + esc(p.email) + '</span>' + (p.wa ? '<a class="sub" target="_blank" rel="noopener" href="' + esc(tautanWa(p.wa, 'Halo ' + (p.nama || ''))) + '">WA ' + esc(p.wa) + '</a>' : '') + (p.catatan ? '<span class="sub">' + esc(p.catatan) + '</span>' : '') + '</td>' +
       '<td>' + esc(p.paket_label) + '</td><td class="c">' + badgeLis(p.status) + '</td>' +
       '<td class="small">' + (p.paket === 'LIFE' ? 'Selamanya' : esc(tglIndo(p.berlaku_sampai)) + (p.sisa_hari !== null ? '<span class="sub">' + (p.sisa_hari >= 0 ? 'sisa ' + p.sisa_hari + ' hr' : 'lewat ' + (-p.sisa_hari) + ' hr') + '</span>' : '')) + '</td>' +
-      '<td class="small">' + (p.terpasang ? '<span class="badge b-lulus">Terpasang</span><span class="sub mono">v' + esc(p.backend_versi || '?') + ' · RS ' + esc(p.jumlah_rs || 0) + '/' + p.batas_rs + '</span><span class="sub">cek ' + esc(waktuRelatif(p.terakhir_cek)) + '</span>' : '<span class="badge b-belum">Belum pasang</span>') + '</td>' +
+      '<td class="small">' + (v3 ? (p.terakhir_masuk ? '<span class="mono">RS ' + esc(p.jumlah_rs || 0) + '/' + p.batas_rs + '</span>' + (p.app_versi ? '<span class="sub mono">v' + esc(p.app_versi) + '</span>' : '') + '<span class="sub">masuk ' + esc(waktuRelatif(p.terakhir_masuk)) + '</span>' : '<span class="badge b-belum">Belum pernah masuk</span>') : p.terpasang ? '<span class="badge b-lulus">Terpasang</span><span class="sub mono">v' + esc(p.backend_versi || '?') + ' · RS ' + esc(p.jumlah_rs || 0) + '/' + p.batas_rs + '</span><span class="sub">cek ' + esc(waktuRelatif(p.terakhir_cek)) + '</span>' : '<span class="badge b-belum">Belum pasang</span>') + '</td>' +
       '<td><div class="hstack" style="flex-wrap:nowrap;gap:4px"><button class="btn btn-sm btn-primary" data-pp="' + esc(p.email) + '"' + (p.paket === 'LIFE' ? ' disabled' : '') + '>Perpanjang</button>' +
       '<button class="btn btn-sm btn-ghost btn-icon" data-menu="' + esc(p.email) + '" aria-label="Lainnya">' + ic('settings') + '</button></div></td></tr>').join('') ||
       '<tr><td colspan="6" class="muted" style="text-align:center;padding:24px">Tidak ada pelanggan yang cocok.</td></tr>';

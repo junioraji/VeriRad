@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Panduan Pemasangan VeriRad</title>
+<title>Panduan VeriRad</title>
 <meta name="description" content="Panduan langkah demi langkah berlangganan, memasang, dan memakai VeriRad untuk fisikawan medis.">
 <link rel="icon" href="icons/favicon-32.png">
 <style>
@@ -17,8 +17,9 @@ header.hero { background: var(--navy); color: #fff; padding: 40px 20px 32px; }
 .wrap { max-width: 860px; margin: 0 auto; padding: 0 20px; }
 header .wrap { padding: 0; }
 .brand { display: flex; align-items: center; gap: 12px; font-weight: 700; font-size: 20px; }
-.logo { width: 40px; height: 40px; border-radius: 10px; background: linear-gradient(135deg, #F7893F, #E35F12); display: grid; place-items: center; }
-.logo svg { width: 24px; height: 24px; stroke: #fff; fill: none; stroke-width: 2.1; stroke-linecap: round; stroke-linejoin: round; }
+.logo { width: 40px; height: 40px; display: block; }
+.logo svg { width: 40px; height: 40px; display: block; }
+.brand em.r { font-style: normal; color: #FF8A3D; }
 h1 { font-size: 34px; line-height: 1.2; margin: 24px 0 8px; letter-spacing: -.02em; }
 h1 em { font-style: normal; color: var(--orange); }
 header p { color: #CBD5E1; margin: 0; max-width: 640px; }
@@ -92,20 +93,20 @@ footer { text-align: center; color: var(--muted); font-size: 14px; padding: 0 20
 </head>
 <body>
 <header class="hero"><div class="wrap">
-  <div class="brand"><span class="logo"><svg viewBox="0 0 24 24"><path d="M20 13c0 5-3.5 7.5-7.66 8.95a1 1 0 0 1-.67-.01C7.5 20.5 4 18 4 13V6a1 1 0 0 1 1-1c2 0 4.5-1.2 6.24-2.72a1.17 1.17 0 0 1 1.52 0C14.51 3.81 17 5 19 5a1 1 0 0 1 1 1z"/><path d="m9 12 2 2 4-4"/></svg></span>VeriRad</div>
-  <h1>Panduan Pemasangan <em>VeriRad</em></h1>
-  <p>Dari berlangganan sampai mengisi QC pertama. Pemasangan cukup sekali, kira-kira 10 menit, dan sebaiknya dikerjakan di laptop/PC dengan Google Chrome.</p>
+  <div class="brand"><span class="logo"><svg viewBox="0 0 160 160" aria-hidden="true"><rect width="160" height="160" rx="36" fill="#FFFFFF"/><path d="M80 120 L34 46 H126 Z" fill="#F97316" fill-opacity="0.22"/><path d="M34 46 L80 120 L126 46" fill="none" stroke="#0F1B2D" stroke-width="22" stroke-linecap="round" stroke-linejoin="round"/><path d="M30 26 H130" fill="none" stroke="#F97316" stroke-width="15" stroke-linecap="round"/><circle cx="80" cy="120" r="20" fill="#FFFFFF"/><circle cx="80" cy="120" r="14" fill="#F97316"/></svg></span><span>Veri<em class="r">Rad</em></span></div>
+  <h1>Panduan Memakai <em>VeriRad</em></h1>
+  <p>Dari berlangganan sampai mengirim laporan pertama. Tidak ada yang perlu dipasang: cukup masuk dengan akun Google, dari laptop maupun HP.</p>
   <div class="ringkas">
     <div><b>1. Berlangganan</b>Pilih paket, transfer, kirim bukti.</div>
-    <div><b>2. Pasang sekali</b>Salin, aktifkan, terapkan, tempel.</div>
+    <div><b>2. Masuk dengan Google</b>Izinkan VeriRad menyimpan data di Drive Anda.</div>
     <div><b>3. Pakai di mana saja</b>Laptop & HP, bisa dipasang seperti aplikasi.</div>
   </div>
   <button class="cetak" onclick="window.print()">⎙ Simpan sebagai PDF / cetak</button>
 </div></header>
 
 <nav class="toc"><div class="wrap">
-  <a href="#siapkan">Persiapan</a><a href="#langganan">Berlangganan</a><a href="#pasang">Pasang</a><a href="#aktivasi">Aktivasi</a><a href="#mulai">Mulai memakai</a>
-  <a href="#atasan">Atasan</a><a href="#hp">Pasang di HP</a><a href="#perpanjang">Perpanjang</a><a href="#perbarui">Pembaruan</a><a href="#masalah">Masalah umum</a>
+  <a href="#siapkan">Persiapan</a><a href="#langganan">Berlangganan</a><a href="#masuk">Masuk pertama</a><a href="#mulai">Mulai memakai</a><a href="#kirim">Kirim laporan</a>
+  <a href="#atasan">Atasan</a><a href="#hp">Pasang di HP</a><a href="#perpanjang">Perpanjang</a><a href="#pindah">Pindah dari versi lama</a><a href="#masalah">Masalah umum</a>
 </div></nav>
 
 <main><div class="wrap">
@@ -115,9 +116,9 @@ footer { text-align: center; color: var(--muted); font-size: 14px; padding: 0 20
   <p class="sub">Siapkan ini dulu supaya pemasangan lancar.</p>
   <table>
     <tr><th style="width:38%">Kebutuhan</th><th>Keterangan</th></tr>
-    <tr><td><b>Akun Google (Gmail)</b></td><td>Dipakai untuk login, menyimpan data QC (Google Sheets & Drive), dan mengirim laporan ke atasan. Pakai akun pribadi yang akan Anda gunakan terus.</td></tr>
-    <tr><td><b>Laptop/PC + Google Chrome</b></td><td>Hanya untuk pemasangan pertama. Setelah itu VeriRad bisa dipakai penuh dari HP.</td></tr>
-    <tr><td><b>±10 menit</b></td><td>Dan koneksi internet yang stabil.</td></tr>
+    <tr><td><b>Akun Google (Gmail)</b></td><td>Dipakai untuk masuk dan menyimpan data QC (Google Sheets & Drive). Pakai akun pribadi yang akan Anda gunakan terus.</td></tr>
+    <tr><td><b>Browser modern</b></td><td>Chrome, Edge, atau Safari di laptop/PC maupun HP. Izinkan <b>pop-up</b> untuk alamat VeriRad (jendela login Google).</td></tr>
+    <tr><td><b>Ruang Google Drive</b></td><td>Cukup ruang gratis 15 GB bawaan Google. Data QC per tahun biasanya hanya beberapa MB; foto & PDF laporan lebih besar.</td></tr>
   </table>
   <div class="kotak aman"><svg viewBox="0 0 24 24"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
     <p><b>Data Anda milik Anda.</b> Semua hasil QC, foto, dan laporan PDF tersimpan di Google Drive akun Anda sendiri. Penjual VeriRad hanya mencatat email, paket, dan masa berlaku langganan, tanpa satu pun hasil pengukuran.</p></div>
@@ -138,68 +139,26 @@ footer { text-align: center; color: var(--muted); font-size: 14px; padding: 0 20
     <li>Isi nama lengkap dan nomor WhatsApp, lalu klik <span class="btnlabel obtn">Lanjut ke pembayaran</span>.</li>
     <li>Transfer <b>tepat sesuai nominal</b> yang tertera, misalnya <b>Rp100.137</b>, ke rekening yang ditampilkan. Tiga digit terakhir adalah <b>kode unik</b> supaya pembayaran Anda langsung dikenali.</li>
     <li>Klik <span class="btnlabel obtn">Kirim bukti via WhatsApp</span>. Pesan WA sudah terisi otomatis; tinggal lampirkan foto bukti transfer.</li>
-    <li>Setelah penjual mengonfirmasi (biasanya kurang dari 1×24 jam), Anda menerima email <b>"Langganan VeriRad Anda aktif"</b>. Buka aplikasi lagi atau klik <span class="btnlabel">Periksa status</span>.</li>
+    <li>Setelah penjual mengonfirmasi (biasanya kurang dari 1×24 jam), Anda menerima email <b>"Langganan VeriRad Anda aktif"</b>. Klik <span class="btnlabel">Periksa status</span> atau buka aplikasi lagi — Anda langsung masuk ke Dasbor.</li>
   </ol>
   <div class="kotak tips"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4M12 8h.01"/></svg>
     <p>Ingin mencoba dulu? Di halaman masuk atau berlangganan, klik <b>Mode Demo</b>. Semua fitur bisa dicoba dengan data contoh tanpa membayar.</p></div>
 </section>
 
-<section class="bab halaman-baru" id="pasang">
-  <h2><span class="no">2</span>Pasang VeriRad (sekali saja)</h2>
-  <p class="sub">Setelah langganan aktif, masuk ke aplikasi dari <b>laptop/PC</b>. Anda akan melihat halaman <b>Pasang VeriRad</b> berisi <b>kode aktivasi</b> (contoh: <span class="mono">K7QX-M2PA</span>). Biarkan halaman itu tetap terbuka di satu tab.</p>
-
-  <h3>Langkah A — Salin VeriRad ke Google Drive Anda</h3>
+<section class="bab halaman-baru" id="masuk">
+  <h2><span class="no">2</span>Masuk pertama kali — tanpa pemasangan</h2>
+  <p class="sub">VeriRad menyimpan data QC langsung di <b>Google Drive akun Anda</b>. Saat pertama masuk, Google menanyakan izin untuk itu.</p>
   <div class="dua"><ol class="langkah">
-    <li>Pastikan Chrome sedang masuk dengan <b>akun Google yang sama</b> dengan akun langganan. Cek foto profil di pojok kanan atas halaman Google.</li>
-    <li>Di halaman Pasang, klik <span class="btnlabel obtn">Buat salinan VeriRad</span>.</li>
-    <li>Di halaman Google yang terbuka, klik tombol biru <span class="btnlabel gbtn">Buat salinan</span>.</li>
-    <li>Spreadsheet baru bernama <b>Salinan VeriRad…</b> terbuka. Inilah database pribadi Anda. Boleh diganti namanya, tetapi <b>jangan dibagikan</b> ke orang lain.</li>
+    <li>Buka alamat VeriRad, klik <span class="btnlabel obtn">Masuk dengan Google</span>, lalu pilih akun langganan Anda.</li>
+    <li>Google menampilkan <b>VeriRad ingin mengakses Akun Google Anda</b>. Pastikan izin <b>"Lihat, edit, buat, dan hapus file Google Drive tertentu yang Anda gunakan dengan aplikasi ini"</b> <b>tercentang</b>, lalu klik <span class="btnlabel gbtn">Lanjutkan</span>.</li>
+    <li>VeriRad membuat folder <b>VeriRad</b> di Google Drive Anda berisi spreadsheet <b>VeriRad — Database QC</b>, folder berkas, dan folder laporan PDF. Ini hanya terjadi sekali, ±10 detik.</li>
+    <li>Baca pesan <b>Sebelum mulai</b> tentang toleransi, klik <span class="btnlabel obtn">Saya mengerti, lanjutkan</span>. Selesai — Anda di Dasbor.</li>
   </ol>
-  <div><div class="mk"><div class="mk-bar"><i></i><i></i><i></i></div><div class="mk-dlg"><b>Salin dokumen</b><span>Apakah Anda ingin membuat salinan <u>VeriRad (Template)</u>?</span><small>File Apps Script yang terlampir juga akan disalin.</small><div style="text-align:right"><span class="mk-b mk-p">Buat salinan</span></div></div></div><div class="cap">Ilustrasi — tampilan asli bisa sedikit berbeda</div></div></div>
-
-  <h3 id="aktivasi">Langkah B — Jalankan menu Aktifkan & beri izin</h3>
-  <div class="dua"><ol class="langkah">
-    <li>Di spreadsheet salinan, tunggu ±5 detik sampai menu <b>VeriRad</b> muncul di sebelah menu <b>Bantuan</b>. Bila belum muncul, muat ulang halaman.</li>
-    <li>Klik <b>VeriRad → ① Aktifkan VeriRad</b>.</li>
-    <li>Muncul <b>Otorisasi diperlukan</b>: klik <span class="btnlabel gbtn">OK</span> lalu pilih akun Google Anda.</li>
-    <li>Muncul peringatan <b>"Google belum memverifikasi aplikasi ini"</b>: klik <span class="mk-link">Lanjutan</span>, lalu <span class="mk-link">Buka VeriRad (tidak aman)</span>.</li>
-    <li>Klik <span class="btnlabel gbtn">Izinkan</span>.</li>
-    <li>Klik lagi <b>VeriRad → ① Aktifkan VeriRad</b>. Tunggu beberapa detik sampai panel <b>Aktifkan VeriRad</b> muncul di sebelah kanan.</li>
-  </ol>
-  <div><div class="mk"><div class="mk-bar"><i></i><i></i><i></i></div><div class="mk-menu"><span>File</span><span>Edit</span><span>Lihat</span><span>…</span><span>Bantuan</span><span class="mk-on">VeriRad</span></div>
-    <div class="mk-drop"><span class="mk-sel">① Aktifkan VeriRad</span><span>Perbarui backend</span><span>Status &amp; bantuan</span></div></div>
-    <div class="mk" style="margin-top:12px"><div class="mk-dlg"><b>Google belum memverifikasi aplikasi ini</b><small>Aplikasi meminta akses ke informasi sensitif di Akun Google Anda…</small><span class="mk-link">Lanjutan</span><span class="mk-link">Buka VeriRad (tidak aman)</span></div></div>
-    <div class="cap">Ilustrasi — tampilan asli bisa sedikit berbeda</div></div></div>
-  <div class="kotak awas"><svg viewBox="0 0 24 24"><path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3"/><path d="M12 9v4M12 17h.01"/></svg>
-    <p><b>Mengapa ada peringatan "tidak aman"?</b> Skrip VeriRad kini berada di akun Anda sendiri dan meminta izin mengelola spreadsheet, Drive, dan email milik Anda. Google menampilkan peringatan untuk setiap skrip pribadi yang belum melalui verifikasi Google. Skrip ini hanya bekerja di akun Anda; data tidak dikirim ke pihak lain.</p></div>
-
-  <h3>Langkah C — Terapkan sebagai aplikasi web</h3>
-  <div class="dua"><ol class="langkah">
-    <li>Di panel kanan, klik <span class="btnlabel">Buka editor Apps Script ↗</span>. Editor terbuka di tab baru.</li>
-    <li>Di pojok kanan atas editor, klik tombol biru <span class="btnlabel gbtn">Terapkan</span> → <b>Penerapan baru</b>.</li>
-    <li>Klik ikon roda gigi ⚙️ di samping <b>Pilih jenis</b>, lalu pilih <b>Aplikasi web</b>.</li>
-    <li>Atur: <b>Jalankan sebagai</b> = <b>Saya</b> (email Anda), dan <b>Yang memiliki akses</b> = <b>Siapa saja</b>.</li>
-    <li>Klik <span class="btnlabel gbtn">Terapkan</span>. Bila diminta, klik <b>Izinkan akses</b> dan ulangi izin seperti langkah B.</li>
-    <li>Klik <span class="btnlabel">Salin</span> pada <b>URL aplikasi web</b>. Alamatnya diawali <span class="mono">https://script.google.com/macros/s/</span> dan berakhiran <span class="mono">/exec</span>.</li>
-  </ol>
-  <div><div class="mk"><div class="mk-bar"><i></i><i></i><i></i><span class="mk-b mk-p" style="margin-left:auto">Terapkan ▾</span></div><div class="mk-dlg"><b>Penerapan baru</b>
-    <span class="mk-row"><small>Pilih jenis</small>⚙️ Aplikasi web</span><span class="mk-row"><small>Jalankan sebagai</small>Saya</span><span class="mk-row"><small>Yang memiliki akses</small><u>Siapa saja</u></span>
-    <div class="mk-url">https://script.google.com/macros/s/AKfy…/exec <span class="mk-b">Salin</span></div></div></div><div class="cap">Ilustrasi — tampilan asli bisa sedikit berbeda</div></div></div>
-  <div class="kotak bahaya"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="m15 9-6 6M9 9l6 6"/></svg>
-    <p><b>Kesalahan paling sering:</b> memilih akses "Hanya saya" atau menyalin alamat berakhiran <span class="mono">/dev</span>. Pastikan aksesnya <b>Siapa saja</b> dan alamatnya berakhiran <span class="mono">/exec</span>.</p></div>
-
-  <h3>Langkah D — Tempel & aktifkan</h3>
-  <div class="dua"><ol class="langkah">
-    <li>Kembali ke tab <b>spreadsheet</b>. Di panel <b>Aktifkan VeriRad</b>, tempel URL tadi di kolom <b>URL aplikasi web</b>.</li>
-    <li>Kembali ke tab <b>aplikasi VeriRad</b>, klik <span class="btnlabel obtn">Salin kode</span>, lalu tempel di kolom <b>Kode aktivasi</b> pada panel.</li>
-    <li>Klik <span class="btnlabel obtn">Aktifkan VeriRad</span> dan tunggu ±10 detik sampai muncul <b>✓ VeriRad aktif</b>.</li>
-    <li>Buka lagi tab aplikasi VeriRad. Halaman Pasang akan lanjut otomatis ke <b>Dasbor</b>, atau klik <span class="btnlabel">Periksa sekarang</span>.</li>
-  </ol>
-  <div><div class="mk" style="height:230px"><div class="mk-bar"><i></i><i></i><i></i></div><div style="padding:10px;color:#94A3B8">Spreadsheet…</div>
-    <div class="mk-side"><b>Aktifkan VeriRad</b><small>URL aplikasi web</small><span class="mk-in">https://script.google.com/…/exec</span><small>Kode aktivasi</small><span class="mk-in">K7QX-M2PA</span><span class="mk-go">Aktifkan VeriRad</span></div></div>
-    <div class="cap">Panel aktivasi di spreadsheet</div></div></div>
-  <div class="kotak aman"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="m9 12 2 2 4-4"/></svg>
-    <p><b>Selesai!</b> Pemasangan tidak perlu diulang. Mulai sekarang cukup buka alamat aplikasi VeriRad dan masuk dengan Google, di laptop maupun HP.</p></div>
+  <div><div class="mk"><div class="mk-dlg"><b>VeriRad ingin mengakses Akun Google Anda</b><span class="mk-row">☑ Lihat, edit, buat, dan hapus file Google Drive <u>tertentu</u> yang Anda gunakan dengan aplikasi ini</span><div style="text-align:right"><span class="mk-b mk-p">Lanjutkan</span></div></div></div><div class="cap">Ilustrasi — tampilan asli bisa sedikit berbeda</div></div></div>
+  <div class="kotak aman"><svg viewBox="0 0 24 24"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+    <p><b>Apa yang bisa dibuka VeriRad?</b> Hanya berkas yang dibuat VeriRad sendiri (folder VeriRad). Dokumen, foto, dan email Anda yang lain <b>tidak</b> bisa dibuka. Server penjual hanya mencatat email & masa langganan — hasil QC tidak pernah dikirim ke penjual. Izin bisa dicabut kapan saja di <b>Akun Google → Keamanan → Aplikasi pihak ketiga</b>.</p></div>
+  <div class="kotak tips"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4M12 8h.01"/></svg>
+    <p><b>Membuka lagi di lain waktu</b> langsung tampil dari salinan di perangkat (cepat & bisa offline). Bila muncul pita kuning <b>"Belum tersambung ke Google Drive"</b>, klik <span class="btnlabel obtn">Sambungkan lagi</span> — Google memperbarui izin dalam sekejap.</p></div>
 </section>
 
 <section class="bab halaman-baru" id="mulai">
@@ -210,34 +169,50 @@ footer { text-align: center; color: var(--muted); font-size: 14px; padding: 0 20
     <li><b>Kelola RS & Alat.</b> Tambahkan rumah sakit (maksimal 3) beserta logo, penandatangan, dan email atasan penerima laporan. Lalu daftarkan alat radiologi di setiap RS.</li>
     <li><b>Template Toleransi.</b> Periksa batas toleransi bawaan terhadap acuan yang Anda pakai. Anda bebas menambah parameter, rumus, dan jenis alat sendiri. Butir bertanda ⚠ perlu keputusan Anda.</li>
     <li><b>Input QC.</b> Pilih alat, isi nilai pengukuran; status lulus/gagal muncul otomatis. Ambil foto bukti langsung dari kamera HP. Bisa disimpan sebagai draf, juga saat tanpa sinyal.</li>
-    <li><b>Laporan.</b> Pilih RS dan periode, periksa pratinjau, lalu klik <span class="btnlabel obtn">Kirim ke atasan</span>. PDF terkirim dari Gmail Anda dan arsipnya tersimpan di Drive.</li>
+    <li><b>Laporan.</b> Pilih RS dan periode, periksa pratinjau, lalu klik <span class="btnlabel obtn">Buat &amp; kirim</span> (lihat bab 4). PDF-nya sama persis dengan pratinjau dan arsipnya tersimpan di Drive Anda.</li>
   </ol>
   <div class="kotak tips"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4M12 8h.01"/></svg>
     <p>Batas 3 rumah sakit menghitung RS aktif maupun nonaktif. Untuk mengganti RS, hapus RS lama di Kelola RS & Alat. Hasil QC RS yang dihapus ikut terhapus, jadi unduh laporan/CSV-nya dulu bila masih diperlukan.</p></div>
 </section>
 
-<section class="bab" id="atasan">
-  <h2><span class="no">4</span>Menautkan atasan / kepala instalasi</h2>
+<section class="bab" id="kirim">
+  <h2><span class="no">4</span>Membuat & mengirim laporan PDF</h2>
   <ol class="langkah">
-    <li>Buka <b>Pengaturan → Pengguna & hak akses → Tautkan atasan</b>.</li>
-    <li>Isi email Google atasan, nama, dan jabatan, lalu centang RS yang boleh ia lihat. Klik <b>Simpan</b>.</li>
-    <li>Kirimkan alamat aplikasi VeriRad kepada atasan. Atasan cukup <b>masuk dengan Google</b>; tidak perlu berlangganan atau memasang apa pun.</li>
+    <li>Di menu <b>Laporan</b>, klik <span class="btnlabel obtn">Buat &amp; kirim</span>. PDF dibuat di perangkat Anda lalu disimpan ke Google Drive (folder <b>VeriRad → Laporan PDF</b>).</li>
+    <li>Jendela <b>Kirim laporan</b> terbuka dengan email atasan sudah terisi. Pilih salah satu:
+      <ul>
+        <li><span class="btnlabel obtn">Bagikan PDF…</span> <i>(HP & sebagian laptop)</i> — PDF dilampirkan langsung ke Gmail, WhatsApp, atau aplikasi lain pilihan Anda.</li>
+        <li><span class="btnlabel">Buka di Gmail</span> — Gmail Anda terbuka dengan subjek, pesan, dan <b>tautan PDF</b>; penerima otomatis diberi akses lihat. Periksa lalu klik <b>Kirim</b> di Gmail.</li>
+        <li><span class="btnlabel">Kirim via WhatsApp</span> — pesan WA berisi tautan PDF. VeriRad meminta persetujuan agar PDF bisa dibuka siapa saja yang memegang tautannya.</li>
+      </ul></li>
+    <li>Laporan tercatat di <b>Riwayat laporan</b> dengan status <b>Dibagikan</b>. Tombol <span class="btnlabel">Kirim ulang</span> membuka jendela yang sama kapan saja.</li>
   </ol>
-  <p>Atasan hanya melihat menu <b>Dasbor</b> dan <b>Riwayat & Tren</b> untuk RS yang dicentang, tanpa bisa mengubah data. Laporan PDF tetap dikirim ke email atasan setiap kali Anda menekan Kirim.</p>
+  <p>Hanya ingin berkasnya? Klik <span class="btnlabel">Unduh PDF</span>.</p>
+</section>
+
+<section class="bab" id="atasan">
+  <h2><span class="no">5</span>Atasan / kepala instalasi — cukup lewat tautan</h2>
+  <ol class="langkah">
+    <li>Buka <b>Pengaturan → Pengguna & hak akses → Tautkan atasan</b>. Isi email, nama, jabatan, centang RS yang boleh ia lihat, lalu <b>Simpan</b>.</li>
+    <li>Jendela <b>Tautan</b> terbuka. Klik <span class="btnlabel obtn">Kirim via WhatsApp</span> atau <span class="btnlabel">Kirim via Gmail</span> (pesan sudah terisi).</li>
+    <li>Atasan membuka tautan di HP/laptop, membuat <b>PIN 4–6 angka</b>, lalu melihat <b>Dasbor</b> dan <b>Riwayat & Tren</b> RS-nya. Atasan <b>tidak perlu akun Google</b>, tidak perlu berlangganan, dan tidak bisa mengubah data.</li>
+  </ol>
+  <div class="kotak awas"><svg viewBox="0 0 24 24"><path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3"/><path d="M12 9v4M12 17h.01"/></svg>
+    <p>Tautan itu <b>rahasia</b>. Ringkasan untuk atasan dienkripsi di perangkat Anda dan diperbarui otomatis setelah Anda menyimpan QC. Bila tautan tersebar, buka Pengaturan → <b>Tautan</b> → <b>Buat tautan baru</b>; tautan lama langsung tidak berlaku. Menonaktifkan atau menghapus atasan juga menutup aksesnya.</p></div>
 </section>
 
 <section class="bab" id="hp">
-  <h2><span class="no">5</span>Pasang di HP seperti aplikasi</h2>
+  <h2><span class="no">6</span>Pasang di HP seperti aplikasi</h2>
   <table>
     <tr><th style="width:30%">HP</th><th>Caranya</th></tr>
     <tr><td><b>Android (Chrome)</b></td><td>Buka alamat VeriRad → buka menu ☰ di kiri atas → <span class="btnlabel">Pasang aplikasi</span> → <b>Pasang</b>. Ikon VeriRad muncul di layar utama.</td></tr>
     <tr><td><b>iPhone / iPad (Safari)</b></td><td>Buka alamat VeriRad di <b>Safari</b> → tombol <b>Bagikan</b> (kotak dengan panah ke atas) → <b>Tambah ke Layar Utama</b> → <b>Tambah</b>. Lalu masuk sekali lagi di dalam aplikasi tersebut.</td></tr>
   </table>
-  <p>Aplikasi tetap bisa dibuka saat sinyal hilang. Draf QC tersimpan di HP dan terkirim otomatis begitu tersambung.</p>
+  <p>Aplikasi tetap bisa dibuka saat sinyal hilang. Data QC yang disimpan saat offline menunggu di HP dan otomatis masuk ke Google Drive begitu tersambung.</p>
 </section>
 
 <section class="bab" id="perpanjang">
-  <h2><span class="no">6</span>Memperpanjang langganan</h2>
+  <h2><span class="no">7</span>Memperpanjang langganan</h2>
   <ol class="langkah">
     <li>VeriRad memberi tanda di bagian atas aplikasi 14 hari sebelum masa berlaku habis. Email pengingat juga dikirim 7 hari dan 1 hari sebelumnya.</li>
     <li>Buka <b>Pengaturan → Langganan → Perpanjang / ganti paket</b>, pilih paket, lalu transfer sesuai nominal dan kirim bukti via WhatsApp.</li>
@@ -248,33 +223,35 @@ footer { text-align: center; color: var(--muted); font-size: 14px; padding: 0 20
     <p><b>Jika lewat jatuh tempo:</b> ada <b>masa tenggang 7 hari</b> dengan semua fitur tetap jalan. Setelah itu VeriRad menjadi <b>baca saja</b>: data tetap aman dan bisa dilihat, diekspor CSV, dan laporan lama bisa diunduh, tetapi input QC baru dan pengiriman laporan dikunci sampai diperpanjang. Data yang sempat tersimpan di HP tidak hilang dan akan terkirim setelah diperpanjang.</p></div>
 </section>
 
-<section class="bab" id="perbarui">
-  <h2><span class="no">7</span>Pembaruan aplikasi</h2>
-  <p>Tampilan aplikasi diperbarui otomatis. Sesekali penjual merilis <b>pembaruan backend</b>; Anda akan melihat pemberitahuan <b>"Pembaruan backend tersedia"</b>.</p>
+<section class="bab" id="pindah">
+  <h2><span class="no">8</span>Pindah dari VeriRad versi lama (backend Apps Script)</h2>
+  <p class="sub">Hanya untuk pengguna yang dulu memasang VeriRad lewat "Buat salinan" + "Aktifkan VeriRad".</p>
   <ol class="langkah">
-    <li>Buka spreadsheet VeriRad Anda di laptop (tautannya ada di Pengaturan → Langganan → <b>Buka spreadsheet data</b>).</li>
-    <li>Klik <b>VeriRad → Perbarui backend</b> → <b>OK</b>.</li>
-    <li>Hanya pertama kali: bila diminta, buka <a href="https://script.google.com/home/usersettings" target="_blank" rel="noopener">script.google.com/home/usersettings</a>, nyalakan <b>Google Apps Script API</b>, tunggu ±1 menit, lalu ulangi langkah 2.</li>
-    <li>Muat ulang VeriRad di browser/HP. Data Anda tidak berubah.</li>
+    <li>Di laptop, buka spreadsheet VeriRad lama Anda (<b>VeriRad — Database</b> / <b>Salinan VeriRad</b>) → <b>File → Download → Microsoft Excel (.xlsx)</b>.</li>
+    <li>Masuk ke VeriRad seperti bab 2, buka <b>Pengaturan → Pindahkan data dari VeriRad versi lama → Pilih berkas .xlsx</b>.</li>
+    <li>Periksa jumlah RS, alat, sesi QC, dan hasil yang ditemukan, lalu klik <span class="btnlabel obtn">Pindahkan sekarang</span>.</li>
+    <li>Unggah ulang <b>logo RS</b>, <b>foto alat</b>, dan <b>tanda tangan</b>. Kirim ulang tautan ke atasan (bab 5).</li>
   </ol>
+  <p>Lampiran foto dan PDF laporan lama tetap ada di Google Drive Anda (folder <b>VeriRad — Data QC</b>). Setelah yakin data lengkap, spreadsheet & proyek Apps Script lama boleh diarsipkan.</p>
 </section>
 
 <section class="bab" id="masalah">
   <h2><span class="no">?</span>Masalah umum</h2>
-  <details><summary>Menu "VeriRad" tidak muncul di spreadsheet</summary>Tunggu beberapa detik lalu muat ulang halaman (F5). Pastikan Anda membuka <b>salinan</b> milik Anda, bukan template dari penjual.</details>
-  <details><summary>"Kode aktivasi tidak dikenal / kedaluwarsa"</summary>Kode berlaku 48 jam dan hanya sekali pakai. Di halaman Pasang klik <b>Kode baru</b>, lalu salin ulang ke panel.</details>
-  <details><summary>"Web App ini dijalankan oleh akun Google lain"</summary>Spreadsheet disalin atau diterapkan dengan akun yang berbeda dari akun langganan. Keluar dari Google, masuk dengan akun langganan, lalu ulangi pemasangan dari Langkah A.</details>
-  <details><summary>"Web App belum bisa diakses"</summary>Buka editor Apps Script → <b>Terapkan → Kelola penerapan</b> → ✏️ → pastikan <b>Yang memiliki akses = Siapa saja</b> → <b>Terapkan</b>. Lalu klik Aktifkan lagi.</details>
-  <details><summary>Atasan mendapat pesan "Akses ditolak"</summary>Pastikan email atasan sudah ditautkan dan berstatus Aktif di Pengaturan, serta atasan masuk dengan email Google yang sama persis.</details>
+  <details><summary>Jendela login Google tidak muncul</summary>Browser memblokir pop-up. Klik ikon pop-up diblokir di bilah alamat → <b>Selalu izinkan</b> untuk alamat VeriRad, lalu klik Masuk lagi.</details>
+  <details><summary>"Centang izin … agar VeriRad bisa menyimpan data QC"</summary>Saat login, izin Google Drive tidak dicentang. Klik Masuk lagi dan pastikan kotak izin Drive tercentang sebelum Lanjutkan.</details>
+  <details><summary>Pita "Belum tersambung ke Google Drive"</summary>Izin Google berlaku ±1 jam lalu diperbarui otomatis saat Anda memakai aplikasi. Bila pita muncul, klik <b>Sambungkan lagi</b>. Data yang Anda isi sementara itu tetap tersimpan di perangkat dan terkirim setelah tersambung.</details>
+  <details><summary>Data di laptop dan HP berbeda</summary>Klik tombol muat ulang (⟳) di kanan atas. VeriRad memeriksa versi terbaru di Google Drive dan memuatnya.</details>
+  <details><summary>Atasan: "Tautan ini sudah tidak berlaku"</summary>Fisikawan medis membuat tautan baru, menonaktifkan, atau menghapus akun atasan. Minta tautan terbaru.</details>
+  <details><summary>Atasan lupa PIN</summary>Buka lagi tautan dari fisikawan medis — VeriRad meminta PIN baru untuk perangkat itu.</details>
   <details><summary>Ganti HP atau laptop</summary>Cukup buka alamat VeriRad dan masuk dengan akun Google yang sama. Data tersimpan di Google Drive, bukan di perangkat.</details>
-  <details><summary>Saya tidak sengaja menghapus spreadsheet VeriRad</summary>Pulihkan dari <b>Sampah</b> Google Drive (tersimpan 30 hari). Bila perlu memasang ulang, hubungi penjual untuk melepas sambungan lama, lalu ulangi pemasangan.</details>
-  <details><summary>Ingin membuka data mentah</summary>Semua data ada di spreadsheet VeriRad Anda (sheet SesiQC, HasilQC, dll.) dan folder <b>VeriRad — Data QC</b> di Google Drive. Sebaiknya jangan mengedit sheet secara langsung.</details>
+  <details><summary>Saya tidak sengaja menghapus folder/spreadsheet VeriRad</summary>Pulihkan dari <b>Sampah</b> Google Drive (tersimpan 30 hari), lalu muat ulang VeriRad. Jangan memindahkan spreadsheet ke akun lain.</details>
+  <details><summary>Ingin membuka data mentah</summary>Semua data ada di spreadsheet <b>VeriRad — Database QC</b> (folder <b>VeriRad</b> di Google Drive; tautannya di Pengaturan → Langganan). Sebaiknya jangan mengedit sheet secara langsung.</details>
   <div class="kotak tips"><svg viewBox="0 0 24 24"><path d="M7.9 20A9 9 0 1 0 4 16.1L2 22Z"/></svg>
     <p>Masih kesulitan? Hubungi penjual lewat WhatsApp yang tertera di halaman pembayaran, sertakan tangkapan layar pesan kesalahannya.</p></div>
 </section>
 
 </div></main>
-<footer>VeriRad — Smart QC for Safer Radiology · Panduan v2.0</footer>
+<footer>VeriRad — Smart QC for Safer Radiology · Panduan v3.0 · <a href="privasi.html">Kebijakan Privasi</a></footer>
 <script>addEventListener('beforeprint', () => document.querySelectorAll('details').forEach(d => d.open = true));</script>
 </body>
 </html>

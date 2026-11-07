@@ -7,7 +7,7 @@
 daftarHalaman('pengaturan', {
   judul: 'Pengaturan', akses: 'fismed',
   render(el) {
-    const p = AppState.pengaturan;
+    const p = AppState.pengaturan, v3 = window.relayAktif && relayAktif();
     el.innerHTML = '<div class="page-h"><div><h1>Pengaturan</h1><p>Langganan, profil fisikawan medis, tanda tangan laporan, dan siapa saja yang boleh membuka VeriRad.</p></div></div>' +
       kartuLangganan() +
       '<div class="row r-1-1">' +
@@ -33,24 +33,30 @@ daftarHalaman('pengaturan', {
         '<div class="card-f"><button class="btn btn-primary" id="izin-simpan">' + ic('save') + 'Simpan SIP & kota</button></div>'
         : '<div class="card-b">' + kosong('Belum ada rumah sakit', 'Tambahkan RS di menu Kelola RS & Alat, lalu isi nomor SIP per RS di sini.', '<a class="btn" href="#/kelola">Kelola RS & Alat</a>') + '</div>') + '</div>' +
       '<div class="card"><div class="card-h"><h2>' + ic('users') + 'Pengguna & hak akses</h2><button class="btn btn-primary btn-sm" id="u-baru">' + ic('user-plus') + 'Tautkan atasan</button></div>' +
-      '<div class="tbl-wrap"><table class="tbl"><thead><tr><th>Nama</th><th>Email Google</th><th>Peran</th><th>Rumah sakit yang bisa dilihat</th><th class="c">Status</th><th></th></tr></thead><tbody>' +
+      '<div class="tbl-wrap"><table class="tbl"><thead><tr><th>Nama</th><th>' + (v3 ? 'Email' : 'Email Google') + '</th><th>Peran</th><th>Rumah sakit yang bisa dilihat</th><th class="c">Status</th><th></th></tr></thead><tbody>' +
       AppState.pengguna.slice().sort((a, b) => (a.peran > b.peran ? -1 : 1)).map(u => '<tr><td><b>' + esc(u.nama || '—') + '</b><span class="sub">' + esc(u.jabatan || '') + '</span></td><td class="m">' + esc(u.email) + '</td>' +
         '<td>' + (u.peran === 'FISMED' ? '<span class="tag">Fisikawan Medis</span>' : '<span class="tag tag-soft">Atasan (lihat saja)</span>') + '</td>' +
         '<td class="small">' + (u.peran === 'FISMED' ? 'Semua RS' : esc(String(u.rs_ids || '').split(',').map(id => (getRs(id.trim()) || {}).nama || id).join(', '))) + '</td>' +
         '<td class="c">' + (vrBenar(u.aktif) ? '<span class="badge b-lulus">Aktif</span>' : '<span class="badge b-na">Nonaktif</span>') + '</td>' +
-        '<td><div class="hstack" style="flex-wrap:nowrap">' + (u.email.toLowerCase() === AppState.me.email ? '<span class="small muted">Anda</span>' : '<button class="btn btn-sm btn-ghost" data-u="' + esc(u.email) + '">' + ic('pencil') + 'Ubah</button><button class="btn btn-sm btn-ghost btn-icon" data-hapus="' + esc(u.email) + '" aria-label="Hapus">' + ic('trash-2') + '</button>') + '</div></td></tr>').join('') +
-      '</tbody></table></div><div class="tbl-foot"><span>Atasan masuk dengan akun Google-nya sendiri di alamat aplikasi yang sama dan hanya melihat Dasbor serta Riwayat & Tren RS yang dicentang. Paket VeriRad: 1 fisikawan medis, atasan tidak dibatasi.</span></div></div>' +
+        '<td><div class="hstack" style="flex-wrap:nowrap">' + (u.email.toLowerCase() === AppState.me.email ? '<span class="small muted">Anda</span>' : (v3 && u.peran === 'ATASAN' && vrBenar(u.aktif) ? '<button class="btn btn-sm" data-tautan="' + esc(u.email) + '">' + ic('link') + 'Tautan</button>' : '') + '<button class="btn btn-sm btn-ghost" data-u="' + esc(u.email) + '">' + ic('pencil') + 'Ubah</button><button class="btn btn-sm btn-ghost btn-icon" data-hapus="' + esc(u.email) + '" aria-label="Hapus">' + ic('trash-2') + '</button>') + '</div></td></tr>').join('') +
+      '</tbody></table></div><div class="tbl-foot"><span>' + (v3 ? 'Atasan tidak perlu akun: klik <b>Tautan</b> lalu kirim tautan rahasianya lewat WhatsApp/Gmail. Atasan hanya melihat Dasbor serta Riwayat & Tren RS yang dicentang. Paket VeriRad: 1 fisikawan medis, atasan tidak dibatasi.' :
+        'Atasan masuk dengan akun Google-nya sendiri di alamat aplikasi yang sama dan hanya melihat Dasbor serta Riwayat & Tren RS yang dicentang. Paket VeriRad: 1 fisikawan medis, atasan tidak dibatasi.') + '</span></div></div>' +
+      (v3 ? kartuImporV2() : '') +
       '<div class="row r-1-1"><div class="card"><div class="card-h"><h2>' + ic('lock') + 'Keamanan</h2></div><div class="card-b stack">' +
+      (v3 ? '<p class="small muted" style="margin:0">VeriRad hanya bisa membuka berkas yang dibuatnya sendiri di Google Drive Anda (izin <span class="mono">drive.file</span>). Salinan data disimpan di perangkat ini agar cepat & bisa offline.</p>' +
+        '<div><button class="btn btn-danger" id="k-semua">' + ic('log-out') + 'Keluar & hapus salinan di perangkat ini</button></div>' +
+        '<p class="small muted" style="margin:0">Cabut akses kapan saja di <a href="https://myaccount.google.com/permissions" target="_blank" rel="noopener">Akun Google → Keamanan → Aplikasi pihak ketiga</a>. Jangan bagikan spreadsheet database VeriRad ke orang lain.</p></div></div>' :
       '<p class="small muted" style="margin:0">Sesi login berlaku 12 jam. Bila perangkat hilang atau dipinjam, akhiri semua sesi Anda.</p>' +
       '<div><button class="btn btn-danger" id="k-semua">' + ic('log-out') + 'Keluar dari semua perangkat</button></div>' +
-      '<p class="small muted" style="margin:0">Data tersimpan di Google Sheets & Drive akun Anda. Jangan bagikan spreadsheet database dan jangan menambah editor proyek Apps Script sembarangan.</p></div></div>' +
+      '<p class="small muted" style="margin:0">Data tersimpan di Google Sheets & Drive akun Anda. Jangan bagikan spreadsheet database dan jangan menambah editor proyek Apps Script sembarangan.</p></div></div>') +
       '<div class="card"><div class="card-h"><h2>' + ic('info') + 'Tentang aplikasi</h2></div><div class="card-b"><dl class="kv" style="margin:0">' +
-      '<dt>Versi</dt><dd>VeriRad ' + esc(VR_VERSI) + '</dd><dt>Mode</dt><dd>' + (AppState.demo ? 'Demo (data lokal)' : 'Server Google Apps Script') + '</dd>' +
-      '<dt>Backend</dt><dd>' + esc(AppState.demo ? '—' : GAS_URL.replace(/\/macros\/s\/(.{6}).*\/exec/, '/macros/s/$1…/exec')) + '</dd>' +
+      '<dt>Privasi</dt><dd><a href="privasi.html" target="_blank" rel="noopener">Kebijakan Privasi</a></dd><dt>Versi</dt><dd>VeriRad ' + esc(VR_VERSI) + '</dd><dt>Mode</dt><dd>' + (AppState.demo ? 'Demo (data lokal)' : v3 ? 'Google Drive Anda (langsung)' : 'Server Google Apps Script') + '</dd>' +
+      (v3 ? '<dt>Database</dt><dd><a href="' + esc(DB.url()) + '" target="_blank" rel="noopener">VeriRad — Database QC</a></dd>' :
+        '<dt>Backend</dt><dd>' + esc(AppState.demo ? '—' : GAS_URL.replace(/\/macros\/s\/(.{6}).*\/exec/, '/macros/s/$1…/exec')) + '</dd>') +
       '<dt>Toleransi disetujui</dt><dd title="' + esc(p.toleransi_disetujui || '') + '">' + esc(p.toleransi_disetujui ? String(p.toleransi_disetujui).slice(0, 10) : 'belum') + '</dd>' +
       '<dt>Aplikasi HP/laptop</dt><dd>' + (PWA.standalone ? 'Terpasang' : PWA.bisa() ? 'Bisa dipasang' : 'Buka di Chrome/Edge/Safari untuk memasang') + '</dd></dl>' +
       '<div style="margin-top:12px">' + tombolPasang('btn btn-sm') + '</div>' +
-      '<p class="hint" style="margin-top:12px">Ketik <span class="mono">Perf.table()</span> di console browser untuk melihat waktu respons server.</p></div></div></div>';
+      (v3 ? '' : '<p class="hint" style="margin-top:12px">Ketik <span class="mono">Perf.table()</span> di console browser untuk melihat waktu respons server.</p>') + '</div></div></div>';
     pasangKartuLangganan(el);
     dataUriBerkas(p.ttd_file_id).then(u => { const b = $('#ttd-box'); if (u && b) { b.classList.remove('xbox'); b.innerHTML = '<img src="' + u + '" alt="Tanda tangan">'; } });
     $('#p-simpan', el).addEventListener('click', async e => {
@@ -89,6 +95,8 @@ daftarHalaman('pengaturan', {
       toast(r.message, 'success');
     });
     $('#u-baru', el).addEventListener('click', () => modalPengguna(null));
+    $$('[data-tautan]', el).forEach(b => b.addEventListener('click', () => PaketAtasan.modal(AppState.pengguna.find(u => u.email === b.dataset.tautan))));
+    if (v3) pasangImporV2(el);
     $$('[data-u]', el).forEach(b => b.addEventListener('click', () => modalPengguna(AppState.pengguna.find(u => u.email === b.dataset.u))));
     $$('[data-hapus]', el).forEach(b => b.addEventListener('click', async () => {
       if (!(await konfirmasi('Hapus pengguna?', b.dataset.hapus + ' tidak akan bisa masuk lagi. Sesi aktifnya langsung diakhiri.', 'Hapus', true))) return;
@@ -99,25 +107,26 @@ daftarHalaman('pengaturan', {
     }));
     $('#k-semua', el).addEventListener('click', async () => {
       if (AppState.demo) return toast('Tidak tersedia di mode demo.', 'info');
+      if (v3) { if (await konfirmasi('Keluar & hapus salinan?', 'Salinan data di perangkat ini dihapus. Data di Google Drive Anda tetap aman; masuk lagi untuk memuatnya.', 'Keluar', true)) keluar(true); return; }
       if (await konfirmasi('Keluar dari semua perangkat?', 'Semua sesi akun Anda (termasuk di perangkat ini) akan diakhiri.', 'Keluar semua', true)) keluar(true);
     });
   }
 });
 
 function modalPengguna(u) {
-  const baru = !u;
+  const baru = !u, v3 = window.relayAktif && relayAktif();
   u = u || { peran: 'ATASAN', aktif: 'TRUE', rs_ids: '' };
   const ids = String(u.rs_ids || '').split(',').map(x => x.trim());
   const m = modal({
     judul: baru ? 'Tautkan pengguna' : 'Ubah ' + u.email, ikon: 'user-plus',
-    isi: '<div class="stack"><div class="field"><label for="u-email">Email Google (Gmail) <span class="req">*</span></label><input class="input mono" type="email" id="u-email" value="' + esc(u.email || '') + '"' + (baru ? '' : ' readonly') + ' placeholder="nama@gmail.com"></div>' +
+    isi: '<div class="stack"><div class="field"><label for="u-email">' + (v3 ? 'Email atasan' : 'Email Google (Gmail)') + ' <span class="req">*</span></label><input class="input mono" type="email" id="u-email" value="' + esc(u.email || '') + '"' + (baru ? '' : ' readonly') + ' placeholder="nama@gmail.com"></div>' +
       '<div class="grid-2"><div class="field"><label for="u-nama">Nama</label><input class="input" id="u-nama" value="' + esc(u.nama || '') + '"></div><div class="field"><label for="u-jab">Jabatan</label><input class="input" id="u-jab" value="' + esc(u.jabatan || '') + '" placeholder="mis. Kepala Instalasi Radiologi"></div></div>' +
       '<div class="field"><label for="u-peran">Peran</label><select class="input" id="u-peran"><option value="ATASAN"' + (u.peran !== 'FISMED' ? ' selected' : '') + '>Atasan — hanya melihat RS terpilih</option>' +
       (u.peran === 'FISMED' ? '<option value="FISMED" selected>Fisikawan medis — akses penuh</option>' : '<option value="FISMED" disabled>Fisikawan medis — paket hanya untuk 1 orang</option>') + '</select>' +
-      '<span class="hint">Atasan hanya melihat Dasbor dan Riwayat & Tren untuk RS yang dicentang.</span></div>' +
+      '<span class="hint">Atasan hanya melihat Dasbor dan Riwayat & Tren untuk RS yang dicentang.' + (v3 ? ' Setelah disimpan, kirim tautan rahasia kepadanya — tanpa perlu akun.' : '') + '</span></div>' +
       '<fieldset class="field" id="u-rs" style="border:1px solid var(--border);border-radius:var(--r-sm);padding:12px"><legend class="lbl">Rumah sakit yang bisa dilihat</legend>' +
       rsAktif().map(r => '<label class="check"><input type="checkbox" value="' + r.rs_id + '"' + (ids.indexOf(r.rs_id) > -1 ? ' checked' : '') + '><span>' + esc(r.nama) + '</span></label>').join('') + '</fieldset>' +
-      '<label class="switch"><input type="checkbox" id="u-aktif"' + (vrBenar(u.aktif) ? ' checked' : '') + '><span class="trk"></span>Aktif (boleh masuk)</label></div>',
+      '<label class="switch"><input type="checkbox" id="u-aktif"' + (vrBenar(u.aktif) ? ' checked' : '') + '><span class="trk"></span>' + (v3 ? 'Aktif (tautan bisa dibuka)' : 'Aktif (boleh masuk)') + '</label></div>',
     tombol: [{ label: 'Batal' }, { label: 'Simpan', kelas: 'btn-primary', ikon: 'save', aksi: async (bg) => {
       const email = $('#u-email', bg).value.trim().toLowerCase(), peran = $('#u-peran', bg).value;
       if (!emailOk(email)) { toast('Email tidak valid.', 'warning'); return false; }
@@ -127,9 +136,47 @@ function modalPengguna(u) {
       if (!r.success) { toast(r.message, 'error'); return false; }
       const i = AppState.pengguna.findIndex(x => x.email === r.data.email);
       if (i > -1) AppState.pengguna[i] = r.data; else AppState.pengguna.push(r.data);
+      if (v3) { toast(r.message, 'success'); rute(); if (r.data.peran === 'ATASAN' && vrBenar(r.data.aktif) && (baru || !Mesin.petaTautan()[email])) setTimeout(() => PaketAtasan.modal(r.data), 80); return; }
       toast(r.message + (baru ? ' Kirimkan alamat aplikasi ini kepada ' + email + '.' : ''), 'success'); rute();
     } }]
   });
   const sinkron = () => { $('#u-rs', m).classList.toggle('hidden', $('#u-peran', m).value === 'FISMED'); };
   $('#u-peran', m).addEventListener('change', sinkron); sinkron();
+}
+
+/* ---------------- Mode Drive v3: pindahkan data dari VeriRad versi lama (backend Apps Script) ---------------- */
+function kartuImporV2() {
+  return '<div class="card"><div class="card-h"><h2>' + ic('upload') + 'Pindahkan data dari VeriRad versi lama</h2></div><div class="card-b stack">' +
+    '<p class="small muted" style="margin:0">Pernah memakai VeriRad dengan backend Apps Script (spreadsheet <b>VeriRad — Database</b>)? Pindahkan semua RS, alat, template, dan riwayat QC-nya ke sini:</p>' +
+    '<ol class="small" style="margin:0;padding-left:18px"><li>Buka spreadsheet database lama → <b>File → Download → Microsoft Excel (.xlsx)</b>.</li><li>Pilih berkas itu di bawah, periksa jumlah datanya, lalu konfirmasi.</li></ol>' +
+    '<div class="banner banner-warn small">' + ic('triangle-alert') + '<div class="t">Data di VeriRad ini untuk tabel yang ada di berkas akan <b>diganti</b>. Logo RS, foto alat, dan tanda tangan perlu diunggah ulang. Lampiran & PDF lama tetap ada di Google Drive lama Anda.</div></div>' +
+    '<div><label class="btn">' + ic('upload') + 'Pilih berkas .xlsx<input type="file" class="sr-only" id="imp-xlsx" accept=".xlsx,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"></label></div></div></div>';
+}
+function muatXlsx() {
+  if (window.XLSX) return Promise.resolve();
+  return new Promise((res, rej) => { const s = document.createElement('script'); s.src = 'js/vendor/xlsx.mini.min.js'; s.onload = res; s.onerror = () => rej(new Error('Pembaca Excel gagal dimuat.')); document.head.appendChild(s); });
+}
+function pasangImporV2(el) {
+  const inp = $('#imp-xlsx', el); if (!inp) return;
+  inp.addEventListener('change', async e => {
+    const f = e.target.files[0]; e.target.value = ''; if (!f) return;
+    let hasil;
+    try { await muatXlsx(); hasil = await Mesin.imporXlsx(await f.arrayBuffer()); }
+    catch (er) { return toast(er.message, 'error'); }
+    const n = hasil.jumlah, label = { RS: 'rumah sakit', Alat: 'alat', TemplateJenis: 'template', TemplateParameter: 'parameter', SesiQC: 'sesi QC', HasilQC: 'hasil parameter', Lampiran: 'lampiran', LaporanTerkirim: 'arsip laporan', Pengguna: 'pengguna', Pengaturan: 'pengaturan' };
+    const rsN = n.RS || 0, batas = batasRs();
+    modal({
+      judul: 'Pindahkan data?', ikon: 'upload',
+      isi: '<p style="margin-top:0">Ditemukan di <b>' + esc(f.name) + '</b>:</p><ul class="small" style="margin:0 0 12px;padding-left:18px">' +
+        Object.keys(n).map(k => '<li><b class="mono">' + n[k] + '</b> ' + esc(label[k] || k) + '</li>').join('') + '</ul>' +
+        (rsN > batas ? '<div class="banner banner-fail small">' + ic('circle-x') + '<div class="t">Berkas berisi ' + rsN + ' RS, melebihi batas paket (' + batas + ').</div></div>' :
+          '<div class="banner banner-warn small">' + ic('triangle-alert') + '<div class="t">Tabel di atas akan menggantikan data VeriRad ini. Tindakan ini tidak bisa dibatalkan dari aplikasi.</div></div>'),
+      tombol: [{ label: 'Batal' }].concat(rsN > batas ? [] : [{ label: 'Pindahkan sekarang', kelas: 'btn-primary', ikon: 'upload', aksi: async (bg) => {
+        const r = await Mesin.terapkanImpor(hasil.tabel);
+        if (!r.success) { toast(r.message, 'error'); return false; }
+        toast('Data versi lama berhasil dipindahkan.', 'success');
+        await segarkanBoot(true);
+      } }])
+    });
+  });
 }

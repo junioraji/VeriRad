@@ -11,7 +11,8 @@ const Antrean = {
   simpan(l) { Store.set(userKey('antrean'), l); perbaruiPill(); },
   tambah(item) { const l = this.list().filter(x => x.kunci !== item.kunci); l.push(item); this.simpan(l); },
   async flush() {
-    if (AppState.demo || !AppState.token || navigator.onLine === false || this._jalan) return;
+    if (AppState.demo || !AppState.token || navigator.onLine === false || this._jalan || AppState.atasanPaket) return;
+    if (modeRelay() && !GAuth.valid()) return;                         // tunggu pengguna menyambungkan Google lagi
     const l = this.list(); if (!l.length) return;
     this._jalan = true;
     let berhasil = 0;
@@ -54,7 +55,7 @@ async function masuk(data) {
   AppState.foto = data.foto || '';
   AppState.periode = '';
   terapkanBoot(data.boot);
-  if (!AppState.demo) {
+  if (!AppState.demo && !modeRelay()) {
     Store.set('sesi', { token: data.token, email: data.boot.me.email, foto: AppState.foto });
     Store.set(userKey('boot'), data.boot);
   }
@@ -64,12 +65,14 @@ async function masuk(data) {
   Antrean.flush();
 }
 async function segarkanBoot(diam) {
+  if (AppState.atasanPaket) return PaketAtasan.segarkan();
+  if (modeRelay() && !AppState.demo && GAuth.valid() && !diam) { try { if (await Mesin.adaBaru()) await Mesin.muat(AppState.me.email); } catch (e) { } }
   const r = await api('boot', {});
   if (!r.success) { if (!diam) toast(r.message, 'error'); return false; }
   const per = AppState.periode;
   terapkanBoot(r.data);
   AppState.periode = per || r.data.periode;
-  if (!AppState.demo) Store.set(userKey('boot'), r.data);
+  if (!AppState.demo && !modeRelay()) Store.set(userKey('boot'), r.data);
   renderShell(); rute();
   return true;
 }
@@ -78,6 +81,11 @@ function keluar(semua) {
     if (semua && !AppState.demo) await api('auth.keluarSemua', {});
     if (!AppState.demo) { Store.del(userKey('boot')); Store.del('sesi'); }
     if (modeLisensi() && !AppState.demo) { Lis.lupa(); setBackend(''); }
+    if (modeRelay() && !AppState.demo) {
+      if (AppState.atasanPaket) PaketAtasan.lupa();
+      else { Lis.lupa(); Store.del('sesi3'); GAuth.keluar(); Mesin.reset(); if (semua) DB.cacheHapus(String((AppState.me || {}).email || '').toLowerCase()); }
+    }
+    AppState.atasanPaket = null;
     try { if (window.google && google.accounts) google.accounts.id.disableAutoSelect(); } catch (e) { }
     AppState.token = ''; AppState.me = null; AppState.demo = false;
     history.replaceState(null, '', location.pathname);
@@ -99,34 +107,37 @@ function onSessionExpired() {
 function renderLogin(pesan) {
   window.__halLis = null; if (window.Lis) Lis.henti();
   document.title = tr('Masuk') + ' — VeriRad';
-  const siap = modeLisensi() || konfigurasiSiap();
-  const demoBoleh = !siap || modeLisensi() || /[?&]demo\b/.test(location.search);
+  const siap = modeRelay() || modeLisensi() || konfigurasiSiap();
+  const demoBoleh = !siap || modeRelay() || modeLisensi() || /[?&]demo\b/.test(location.search);
   $('#app').innerHTML =
     '<div class="login">' +
     '<section class="login-art">' +
-    '<div><div class="hstack"><div class="brand" style="padding:0;border:0"><div class="logo">' + ic('shield-check') + '</div><div><b>VeriRad</b><span>QC Radiologi</span></div></div></div>' +
+    '<div><div class="hstack"><div class="brand" style="padding:0;border:0"><div class="logo">' + logoVR() + '</div><div><b>Veri<em>Rad</em></b><span>QC Radiologi</span></div></div></div>' +
     '<h1>Smart QC for <em>Safer Radiology</em></h1><p>QC bulanan alat radiologi di beberapa rumah sakit, dari pengukuran di ruangan sampai laporan PDF untuk atasan.</p>' +
     '<div class="feat">' +
     '<div><div class="ico">' + ic('clipboard-pen-line') + '</div><div><b>Input QC cepat</b><span>Form per kategori dengan nilai hitung otomatis.</span></div></div>' +
     '<div><div class="ico">' + ic('circle-check') + '</div><div><b>Lulus/Gagal otomatis</b><span>Dinilai langsung terhadap toleransi template Anda.</span></div></div>' +
     '<div><div class="ico">' + ic('file-text') + '</div><div><b>Laporan PDF sekali klik</b><span>Berkop RS, bertanda tangan, terkirim ke email atasan.</span></div></div>' +
     '</div></div>' +
-    '<p class="small" style="color:#64748B">VeriRad v' + esc(VR_VERSI) + '</p></section>' +
+    '<p class="small" style="color:#64748B">VeriRad v' + esc(VR_VERSI) + ' · <a href="privasi.html" target="_blank" rel="noopener" style="color:#94A3B8">Kebijakan Privasi</a> · <a href="panduan.html" target="_blank" rel="noopener" style="color:#94A3B8">Panduan</a></p></section>' +
     '<section class="login-form">' + tombolBahasa('login-lang') + '<div class="card login-card">' +
-    '<h2>Masuk ke VeriRad</h2><p class="muted" style="margin:0">Gunakan akun Gmail yang terdaftar.</p>' +
-    '<div id="gbtn" class="gbtn-wrap">' + (siap ? '<div class="skel" style="width:300px;height:40px"></div>' : '') + '</div>' +
+    '<h2>Masuk ke VeriRad</h2><p class="muted" style="margin:0">' + (modeRelay() ? 'Gunakan akun Google tempat data QC Anda disimpan.' : 'Gunakan akun Gmail yang terdaftar.') + '</p>' +
+    (modeRelay() ? '<div class="gbtn-wrap"><button class="btn btn-primary btn-block btn-lg" id="btn-masuk-g">' + ic('log-in') + 'Masuk dengan Google</button></div>' :
+      '<div id="gbtn" class="gbtn-wrap">' + (siap ? '<div class="skel" style="width:300px;height:40px"></div>' : '') + '</div>') +
     '<div id="login-msg">' + (pesan || '') + '</div>' +
-    (!siap ? '<div class="banner banner-warn" style="margin-top:8px">' + ic('triangle-alert') + '<div class="t small"><b>Konfigurasi belum lengkap.</b> Isi LISENSI_URL atau GAS_URL di <span class="mono">js/config.js</span>. Sementara itu Anda bisa mencoba Mode Demo.</div></div>' : '') +
+    (!siap ? '<div class="banner banner-warn" style="margin-top:8px">' + ic('triangle-alert') + '<div class="t small"><b>Konfigurasi belum lengkap.</b> Isi RELAY_URL dan GOOGLE_CLIENT_ID di <span class="mono">js/config.js</span>. Sementara itu Anda bisa mencoba Mode Demo.</div></div>' : '') +
     (demoBoleh ? '<div class="divider">atau coba tanpa server</div><div class="stack" style="gap:8px">' +
       '<button class="btn btn-block" data-demo="FISMED">' + ic('flask-conical') + 'Mode Demo — Fisikawan Medis</button>' +
       '<button class="btn btn-block btn-ghost" data-demo="ATASAN">' + ic('eye') + 'Mode Demo — Atasan (lihat saja)</button>' +
       '<p class="hint" style="text-align:center">Data contoh fiktif, hanya di browser ini, hilang saat dimuat ulang.</p></div>' : '') +
     '<div style="margin-top:16px">' + tombolPasang('btn btn-block btn-ghost') + '</div>' +
-    (modeLisensi() ? '<p class="hint" style="margin-top:20px;text-align:center">Fisikawan medis: masuk untuk berlangganan atau memasang VeriRad. Atasan: masuk dengan email yang ditautkan fisikawan medis Anda.</p>' :
+    (modeRelay() ? '<p class="hint" style="margin-top:20px;text-align:center">Fisikawan medis: masuk dengan akun Google untuk berlangganan atau membuka data QC Anda. Atasan: buka tautan yang dikirim fisikawan medis Anda — tidak perlu masuk.</p>' :
+      modeLisensi() ? '<p class="hint" style="margin-top:20px;text-align:center">Fisikawan medis: masuk untuk berlangganan atau memasang VeriRad. Atasan: masuk dengan email yang ditautkan fisikawan medis Anda.</p>' :
       '<p class="hint" style="margin-top:20px;text-align:center">Belum terdaftar? Hubungi fisikawan medis Anda.</p>') +
     '</div></section></div>';
   $$('[data-demo]').forEach(b => b.addEventListener('click', () => mulaiDemo(b.dataset.demo)));
-  if (siap) pasangGoogle();
+  const bg = $('#btn-masuk-g'); if (bg) bg.addEventListener('click', () => masukRelay(bg, 'select_account'));
+  if (siap && !modeRelay()) pasangGoogle();
 }
 function mulaiDemo(peran) {
   AppState.demo = true;
@@ -134,6 +145,96 @@ function mulaiDemo(peran) {
   masuk(Demo.handle('auth.login', { peran }).data);
   toast('Mode Demo aktif. Data contoh fiktif dan tidak dikirim ke server.', 'info');
 }
+/* ---------------- Mode Drive v3: login Google (token drive.file) → relay → database di Drive ---------------- */
+async function masukRelay(btn, prompt) {
+  const msg = $('#login-msg');
+  const tulis = h => { const m = $('#login-msg'); if (m) m.innerHTML = h; };
+  if (btn) setBusy(btn, true, 'Menghubungkan ke Google…');
+  try { await GAuth.minta(prompt == null ? '' : prompt); }
+  catch (e) { if (btn) setBusy(btn, false); tulis('<div class="banner banner-fail small">' + ic('circle-x') + '<div class="t">' + esc(e.message) + '</div></div>'); return; }
+  tulis('<p class="hint" style="text-align:center">' + ic('loader-circle', 'spin') + ' Memeriksa langganan…</p>');
+  const [r, prof] = await Promise.all([Lis.panggil('masuk', { at: GAuth.tok.at, versi: VR_VERSI }), GAuth.profil().catch(() => ({}))]);
+  if (btn) setBusy(btn, false);
+  if (!r.success) { tulis('<div class="banner banner-fail small">' + ic('circle-x') + '<div class="t">' + esc(r.message) + '</div></div>'); return; }
+  r.data.nama_google = prof.name || ''; r.data.foto = prof.picture || '';
+  return lanjutRelay(r.data);
+}
+function lanjutRelay(d) {
+  Lis.simpan(d); Lis.data = d;
+  Store.set('email3', d.email);
+  if (window.__setelahMasukLisensi) { const f = window.__setelahMasukLisensi; window.__setelahMasukLisensi = null; return f(d); }
+  if (/^#\/admin\b/.test(location.hash)) return renderAdmin();
+  if (!d.pelanggan) return renderBeli(d);
+  return bukaDataDrive(d);
+}
+async function bukaDataDrive(d) {
+  AppState.demo = false; AppState.token = 'drive'; AppState.atasanPaket = null;
+  AppState.me = { email: d.email, nama: d.nama_google || (d.pelanggan && d.pelanggan.nama) || '' };
+  AppState.foto = d.foto || AppState.foto || '';
+  terapkanLisensi(d);
+  $('#app').innerHTML = '<div class="boot-load">' + ic('loader-circle', 'spin') + '&nbsp; Membuka data QC di Google Drive Anda…</div>';
+  try { await Mesin.muat(d.email, { nama: AppState.me.nama }); }
+  catch (e) {
+    console.error(e);
+    $('#app').innerHTML = '<div class="boot-load"><div class="card card-b" style="max-width:460px"><h2 style="margin-top:0">' + ic('circle-x') + ' Data belum bisa dibuka</h2><p>' + esc(e.message) + '</p>' +
+      '<div class="hstack" style="gap:8px"><button class="btn btn-primary" id="ul">' + ic('refresh-cw') + 'Coba lagi</button><button class="btn btn-ghost" id="kl">Keluar</button></div></div></div>';
+    $('#ul').addEventListener('click', () => bukaDataDrive(d)); $('#kl').addEventListener('click', () => keluar(false));
+    return;
+  }
+  Store.set('sesi3', { email: d.email, nama: AppState.me.nama, foto: AppState.foto, t: Date.now() });
+  const b = await api('boot', {});
+  masuk({ token: 'drive', foto: AppState.foto, boot: b.data });
+  if (d.pelanggan && d.pelanggan.status === 'AKTIF' && Mesin.tabel('RS').length !== Number(d.pelanggan.jumlah_rs || -1)) Lis.panggil('masuk', { at: GAuth.tok && GAuth.tok.at, versi: VR_VERSI, jumlah_rs: Mesin.tabel('RS').length }).catch(() => { });
+  PaketAtasan.mungkinTerbit();
+}
+/** Buka lagi tanpa klik: tampil dari salinan di perangkat, lalu sinkron di latar bila token Google masih berlaku. */
+async function mulaiRelayTersimpan(s) {
+  Store.set('email3', s.email);
+  AppState.demo = false; AppState.token = 'drive';
+  AppState.me = { email: s.email, nama: s.nama || '' }; AppState.foto = s.foto || '';
+  AppState.lisensi = Store.get(userKey('lisensi3'), null);
+  if (AppState.lisensi && Date.now() - (AppState.lisensi.diperiksa || 0) > 7 * 864e5) AppState.lisensi = Object.assign({}, AppState.lisensi, { boleh_tulis: false, pesan: 'Status langganan perlu diperiksa ulang. Sambungkan ke internet lalu klik "Sambungkan lagi".' });
+  const ada = await Mesin.muat(s.email, { dariCache: true });
+  if (!ada) return layarLanjutkan(s);
+  const b = await api('boot', {});
+  masuk({ token: 'drive', foto: AppState.foto, boot: b.data });
+  if (GAuth.valid()) sinkronRelay(); else onGoogleTerputus();
+}
+function layarLanjutkan(s) {
+  renderLogin('<div class="card card-b" style="margin-top:12px;text-align:center"><p style="margin:0 0 8px">Lanjutkan sebagai <b class="mono">' + esc(s.email) + '</b>?</p><button class="btn btn-primary btn-block" id="btn-lanjut">' + ic('arrow-right') + 'Lanjutkan</button></div>');
+  $('#btn-lanjut').addEventListener('click', e => masukRelay(e.currentTarget, ''));
+}
+/** Periksa langganan & perubahan dari perangkat lain (token Google harus berlaku). */
+async function sinkronRelay() {
+  if (!modeRelay() || !AppState.me || AppState.atasanPaket || AppState.demo || !GAuth.valid()) return;
+  const r = await Lis.panggil('masuk', { at: GAuth.tok.at, versi: VR_VERSI });
+  if (r.success) {
+    Lis.simpan(r.data);
+    if (!r.data.pelanggan) { toast('Langganan untuk akun ini tidak ditemukan.', 'warning'); }
+    terapkanLisensi(r.data); bannerLisensi();
+  }
+  try {
+    if (Antrean.list().length === 0 && await Mesin.adaBaru()) {
+      await Mesin.muat(AppState.me.email);
+      const b = await api('boot', {}); const per = AppState.periode;
+      terapkanBoot(b.data); AppState.periode = per || b.data.periode; renderShell(); rute();
+    }
+  } catch (e) { console.warn('Sinkron:', e.message); }
+  const gb = $('#g-banner'); if (gb) gb.innerHTML = '';
+  Antrean.flush(); PaketAtasan.mungkinTerbit();
+}
+window.onGoogleTerputus = function () {
+  if (!modeRelay() || !AppState.me || AppState.atasanPaket || AppState.demo) return;
+  const box = $('#g-banner'); if (!box) return;
+  box.innerHTML = '<div class="banner banner-warn">' + ic('cloud-off') + '<div class="t small"><b>Belum tersambung ke Google Drive.</b> Anda melihat data yang tersimpan di perangkat ini; data QC baru disimpan di perangkat dulu.</div>' +
+    '<button class="btn btn-sm btn-primary" id="g-sambung">' + ic('refresh-cw') + 'Sambungkan lagi</button></div>';
+  $('#g-sambung', box).addEventListener('click', async e => {
+    setBusy(e.currentTarget, true, 'Menghubungkan…');
+    try { await GAuth.minta(''); box.innerHTML = ''; await sinkronRelay(); }
+    catch (er) { setBusy(e.currentTarget, false); toast(er.message, 'error'); }
+  });
+};
+
 async function pasangGoogle() {
   const cfg = modeLisensi() ? await Lis.config() : await api('auth.config', {});
   const box = $('#gbtn');
@@ -152,6 +253,7 @@ async function pasangGoogle() {
 }
 async function onGoogleCredential(resp) {
   const msg = $('#login-msg');
+  if (modeRelay()) return;
   if (modeLisensi()) {
     if (window.__setelahMasukLisensi) {                                  // login dari halaman Admin
       const r = await Lis.panggil('masuk', { idToken: resp.credential });
@@ -194,9 +296,9 @@ function renderShell() {
   $('#app').classList.toggle('is-demo', !!AppState.demo);
   $('#app').innerHTML = (AppState.demo ? '<div class="demo-ribbon">MODE DEMO — data contoh fiktif, tidak tersimpan ke server</div>' : '') +
     '<div class="shell"><aside class="sidebar" id="sidebar">' +
-    '<div class="brand"><div class="logo">' + ic('shield-check') + '</div><div><b>VeriRad</b><span>Smart QC Radiologi</span></div></div>' +
+    '<div class="brand"><div class="logo">' + logoVR() + '</div><div><b>Veri<em>Rad</em></b><span>Smart QC Radiologi</span></div></div>' +
     '<nav class="nav" aria-label="Menu utama">' + nav + (f && (Lis.sesi() || {}).admin && !AppState.demo ? '<a href="#/admin" data-nav="admin">' + ic('shield-check') + '<span>Admin Lisensi</span></a>' : '') + tombolPasang('nav-pasang') + '</nav>' +
-    '<div class="side-foot">' + (!f ? '<div class="side-card"><b>' + ic('eye') + 'Akses lihat saja</b>Anda memantau hasil QC untuk ' + esc(rsAtasan || 'RS Anda') + '.</div>' :
+    '<div class="side-foot">' + (!f ? '<div class="side-card"><b>' + ic('eye') + 'Akses lihat saja</b>Anda memantau hasil QC untuk ' + esc(rsAtasan || 'RS Anda') + '.' + (AppState.atasanPaket ? '<span class="small" style="display:block;margin-top:6px;opacity:.8">' + esc(PaketAtasan.info()) + '</span>' : '') + '</div>' :
       '<div class="side-card"><b>' + ic('shield-check') + 'QC tepat, laporan cepat</b>Toleransi mengikuti template yang Anda tetapkan.</div>') +
     '<div class="user-box"><div class="avatar">' + (AppState.foto ? '<img src="' + esc(AppState.foto) + '" alt="">' : esc(inisial(me.nama || me.email))) + '</div>' +
     '<div style="min-width:0;flex:1"><div class="nm">' + esc(me.nama || me.email) + '</div><div class="rl">' + (f ? 'Fisikawan Medis' : esc(me.jabatan || 'Atasan')) + '</div></div>' +
@@ -207,7 +309,7 @@ function renderShell() {
     daftarPeriode().map(p => '<option value="' + p + '"' + (p === AppState.periode ? ' selected' : '') + '>' + esc(vrNamaPeriode(p)) + '</option>').join('') + '</select>' +
     '<span class="pill hide-sm" id="pill-sync"><span class="dot"></span><span id="pill-t">Tersambung</span></span>' +
     '<button class="btn btn-ghost btn-icon" id="btn-segar" title="Muat ulang data" aria-label="Muat ulang data">' + ic('refresh-cw') + '</button>' +
-    '</header><div id="lis-banner" class="lis-banner"></div><main class="content" id="page" tabindex="-1"></main></div></div>';
+    '</header><div id="g-banner" class="lis-banner"></div><div id="lis-banner" class="lis-banner"></div><main class="content" id="page" tabindex="-1"></main></div></div>';
   $('#burger').addEventListener('click', () => toggleSidebar(true));
   $('#btn-keluar').addEventListener('click', () => menuAkun());
   $('#btn-segar').addEventListener('click', async e => { setBusy(e.currentTarget, true, ''); await segarkanBoot(); });
@@ -216,9 +318,12 @@ function renderShell() {
   bannerLisensi();
 }
 function menuAkun() {
+  const atasan = !!AppState.atasanPaket, relay = modeRelay() && !AppState.demo && !atasan;
   modal({ judul: 'Akun', ikon: 'user', isi: '<p style="margin:0 0 4px"><b>' + esc(AppState.me.nama || '') + '</b></p><p class="mono small muted" style="margin:0">' + esc(AppState.me.email) + '</p>' +
-    (AppState.demo ? '<p class="hint" style="margin-top:12px">Anda sedang di Mode Demo.</p>' : ''),
-    tombol: [{ label: 'Batal' }].concat(AppState.demo ? [] : [{ label: 'Keluar dari semua perangkat', kelas: 'btn-danger', aksi: () => keluar(true) }]).concat([{ label: 'Keluar', kelas: 'btn-primary', ikon: 'log-out', aksi: () => keluar(false) }]) });
+    (AppState.demo ? '<p class="hint" style="margin-top:12px">Anda sedang di Mode Demo.</p>' : '') +
+    (atasan ? '<p class="hint" style="margin-top:12px">' + esc(PaketAtasan.info()) + '. Keluar akan menghapus tautan dari perangkat ini; buka lagi tautan dari fisikawan medis untuk masuk kembali.</p>' : '') +
+    (relay ? '<p class="hint" style="margin-top:12px">Data QC tersimpan di Google Drive akun ini (folder <b>VeriRad</b>). "Keluar & hapus salinan" juga menghapus salinan data di perangkat ini.</p>' : ''),
+    tombol: [{ label: 'Batal' }].concat(AppState.demo || atasan ? [] : [{ label: relay ? 'Keluar & hapus salinan' : 'Keluar dari semua perangkat', kelas: 'btn-danger', aksi: () => keluar(true) }]).concat([{ label: 'Keluar', kelas: 'btn-primary', ikon: 'log-out', aksi: () => keluar(false) }]) });
 }
 function toggleSidebar(buka) {
   const sb = $('#sidebar'); if (!sb) return;
@@ -231,7 +336,7 @@ function perbaruiPill() {
   const p = $('#pill-sync'); if (!p) return;
   const n = Antrean.list().length, on = navigator.onLine !== false;
   p.className = 'pill hide-sm' + (!on ? ' off' : n ? ' wait' : '');
-  $('#pill-t').textContent = AppState.demo ? 'Mode demo' : !on ? 'Offline' : n ? n + ' belum terkirim' : 'Tersambung';
+  $('#pill-t').textContent = AppState.demo ? 'Mode demo' : AppState.atasanPaket ? 'Lihat saja' : !on ? 'Offline' : n ? n + ' belum terkirim' : 'Tersambung';
 }
 
 /* ---------------- Router ---------------- */
@@ -280,12 +385,20 @@ window.addEventListener('online', () => { perbaruiPill(); Antrean.flush(); });
 window.addEventListener('offline', perbaruiPill);
 document.addEventListener('visibilitychange', () => {
   if (document.visibilityState !== 'visible' || !AppState.token || AppState.demo) return;
-  if (Date.now() - (window.__terakhirLihat || 0) > 120000) { warmUpServer(); Antrean.flush(); }
+  if (Date.now() - (window.__terakhirLihat || 0) > 120000) { if (modeRelay()) { if (!AppState.atasanPaket) { if (GAuth.valid()) sinkronRelay(); else onGoogleTerputus(); } } else { warmUpServer(); Antrean.flush(); } }
   window.__terakhirLihat = Date.now();
 });
 setInterval(() => Antrean.flush(), 60000);
 
 document.addEventListener('DOMContentLoaded', () => {
+  if (modeRelay()) {
+    if (PaketAtasan.dariHash()) return PaketAtasan.mulai();
+    if (/^#\/admin\b/.test(location.hash)) return renderAdmin();
+    const s3 = Store.get('sesi3', null);
+    if (s3 && s3.email) return mulaiRelayTersimpan(s3);
+    if (PaketAtasan.adaTersimpan()) return PaketAtasan.mulai();
+    return renderLogin();
+  }
   if (/^#\/admin\b/.test(location.hash)) return renderAdmin();
   const s = Store.get('sesi', null);
   if (konfigurasiSiap() && s && s.token && !tokenKedaluwarsa(s.token)) {

@@ -8,7 +8,8 @@
 const AppState = {
   demo: false, token: '', me: null, foto: '',
   periode: '', hariIni: '', pengaturan: {}, rs: [], alat: [], templates: [], params: [], pengguna: [],
-  sesi: [], sesiDari: '', laporan: [], hasil: {}, lampiran: {}, berkas: {}, filterRs: '', online: navigator.onLine !== false, lisensi: null
+  sesi: [], sesiDari: '', laporan: [], hasil: {}, lampiran: {}, berkas: {}, filterRs: '', online: navigator.onLine !== false, lisensi: null,
+  atasanPaket: null                                            // mode Drive v3: ringkasan terenkripsi yang dibuka atasan lewat tautan
 };
 
 /* ---------------- Registri halaman (diisi hal-*.js, dijalankan oleh router di app.js) ---------------- */
@@ -35,11 +36,14 @@ const Perf = {
 /* ---------------- API ---------------- */
 const CFG = window.APP_CONFIG || {};
 function urlGasSah(u) { return /^https:\/\/script\.google\.com\/macros\/s\/[^/]+\/exec$/.test(u || '') && !/GANTI|XXXX/.test(u || ''); }
-/** Server lisensi (penjual). Bila diisi, backend tiap pelanggan ditemukan otomatis setelah login. */
-const LISENSI_URL = urlGasSah(CFG.LISENSI_URL) ? CFG.LISENSI_URL : '';
-function modeLisensi() { return !!LISENSI_URL; }
+/** v3 — RELAY penjual + data QC langsung di Google Drive pelanggan (tanpa pasang backend). */
+const RELAY_URL = urlGasSah(CFG.RELAY_URL) ? CFG.RELAY_URL : '';
+function modeRelay() { return !!RELAY_URL && /\.apps\.googleusercontent\.com$/.test(CFG.GOOGLE_CLIENT_ID || ''); }
+/** v2 — server lisensi (penjual). Bila diisi, backend tiap pelanggan ditemukan otomatis setelah login. */
+const LISENSI_URL = modeRelay() ? RELAY_URL : (urlGasSah(CFG.LISENSI_URL) ? CFG.LISENSI_URL : '');
+function modeLisensi() { return !!LISENSI_URL && !modeRelay(); }
 /** Backend aktif: hasil login lisensi (tersimpan di perangkat) atau GAS_URL tetap di config.js. */
-let GAS_URL = (LISENSI_URL && Store.get('backend', '')) || CFG.GAS_URL || '';
+let GAS_URL = modeRelay() ? '' : (LISENSI_URL && Store.get('backend', '')) || CFG.GAS_URL || '';
 function setBackend(u) { GAS_URL = u || ''; if (LISENSI_URL) { if (u) Store.set('backend', u); else Store.del('backend'); } }
 function konfigurasiSiap() { return urlGasSah(GAS_URL); }
 const READ_ACTIONS = /^(auth\.config|boot|sesi\.list|hasil\.list|file\.ambil|laporan\.list|laporan\.unduh)$/;
@@ -74,6 +78,15 @@ async function api(action, data, opt = {}) {
     await new Promise(r => setTimeout(r, 120 + Math.random() * 180));
     try { return JSON.parse(JSON.stringify(Demo.handle(action, JSON.parse(JSON.stringify(data || {}))))); }
     catch (e) { console.error(e); return { success: false, message: e.message }; }
+  }
+  if (AppState.atasanPaket) return PaketAtasan.handle(action, data);
+  if (modeRelay()) {
+    const res = await Mesin.handle(action, data);
+    if (!res.success && res.data && res.data.code === 'LISENSI') {
+      if (res.data.lisensi) { AppState.lisensi = res.data.lisensi; if (window.bannerLisensi) bannerLisensi(); }
+      if (window.onLisensiDitolak && !opt.diam) onLisensiDitolak(res);
+    }
+    return res;
   }
   const isRead = READ_ACTIONS.test(action);
   const reqId = isRead ? '' : (opt.reqId || uuid());
@@ -457,4 +470,15 @@ async function muatSesiSejak(dari) {
   r.data.forEach(upsertSesi);
   AppState.sesiDari = dari;
   return true;
+}
+
+/* ---------- Logo VeriRad: huruf V = berkas sinar-X dari titik fokus (oranye) ke garis detektor ----------
+ * varian 'terang' (kotak putih, V biru tua) untuk latar gelap; 'gelap' (kotak biru tua, V putih) untuk latar terang. */
+function logoVR(varian) {
+  const g = varian === 'gelap', bg = g ? '#0F1B2D' : '#FFFFFF', v = g ? '#FFFFFF' : '#0F1B2D';
+  return '<svg viewBox="0 0 160 160" aria-hidden="true" focusable="false"><rect width="160" height="160" rx="36" fill="' + bg + '"/>' +
+    '<path d="M80 120 L34 46 H126 Z" fill="#F97316" fill-opacity="0.22"/>' +
+    '<path d="M34 46 L80 120 L126 46" fill="none" stroke="' + v + '" stroke-width="22" stroke-linecap="round" stroke-linejoin="round"/>' +
+    '<path d="M30 26 H130" fill="none" stroke="#F97316" stroke-width="15" stroke-linecap="round"/>' +
+    '<circle cx="80" cy="120" r="20" fill="' + bg + '"/><circle cx="80" cy="120" r="14" fill="#F97316"/></svg>';
 }

@@ -5,6 +5,8 @@
  * Selama masih "GANTI_...", aplikasi hanya bisa dibuka dalam Mode Demo.
  * ===================================================================== */
 window.APP_CONFIG = {
-  LISENSI_URL: 'https://script.google.com/macros/s/AKfycbxoMIuPfMrkE3lQuaOMILeyDO4kMl7sqDFORJm_hxmjIPEqMcNoQdUVPkKbuISeOpmoFQ/exec',
-  GAS_URL: ''   // kosongkan; backend tiap pelanggan ditemukan otomatis
+  RELAY_URL: 'https://script.google.com/macros/s/AKfycbz9aWOLjg8YDZYgqJYciNKlm2WPlEgNeUNwu7Cv79GjaOSRVBvOP-OBSEljp-KmhS0V/exec',
+  GOOGLE_CLIENT_ID: '122117264297-49h3q26jcvkbhfpfhub4jgqhc0la3tlp.apps.googleusercontent.com',
+  LISENSI_URL: '',
+  GAS_URL: ''
 };

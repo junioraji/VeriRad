@@ -1,0 +1,198 @@
+<!doctype html>
+<html lang="id">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Kebijakan Privasi VeriRad</title>
+<meta name="description" content="Kebijakan Privasi VeriRad: data apa yang diproses, di mana disimpan, dan hak Anda. Data QC tersimpan di Google Drive Anda sendiri.">
+<link rel="icon" href="icons/favicon-32.png">
+<style>
+:root { --navy: #0F1E3D; --navy7: #1B2A4A; --orange: #F37021; --wash: #FFF1E8; --text: #0F172A; --muted: #5B6B88; --border: #E3E8EF; --canvas: #F5F7FA;
+  --pass: #15803D; --passbg: #DCFCE7; --fail: #B91C1C; --failbg: #FEE2E2; --info: #EFF4FF; --g: #1A73E8; }
+* { box-sizing: border-box; }
+html { scroll-behavior: smooth; overflow-x: clip; }
+body { overflow-x: clip; margin: 0; font-family: Inter, system-ui, -apple-system, "Segoe UI", Roboto, Arial, sans-serif; color: var(--text); background: var(--canvas); line-height: 1.6; font-size: 16px; -webkit-font-smoothing: antialiased; }
+a { color: #C2410C; }
+header.hero { background: var(--navy); color: #fff; padding: 40px 20px 32px; }
+.wrap { max-width: 860px; margin: 0 auto; padding: 0 20px; }
+header .wrap { padding: 0; }
+.brand { display: flex; align-items: center; gap: 12px; font-weight: 700; font-size: 20px; }
+.logo { width: 40px; height: 40px; display: block; }
+.logo svg { width: 40px; height: 40px; display: block; }
+.brand em.r { font-style: normal; color: #FF8A3D; }
+h1 { font-size: 34px; line-height: 1.2; margin: 24px 0 8px; letter-spacing: -.02em; }
+h1 em { font-style: normal; color: var(--orange); }
+header p { color: #CBD5E1; margin: 0; max-width: 640px; }
+.ringkas { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; margin-top: 24px; }
+.ringkas div { background: rgba(255,255,255,.06); border: 1px solid rgba(255,255,255,.12); border-radius: 10px; padding: 12px 14px; font-size: 14px; color: #CBD5E1; }
+.ringkas b { display: block; color: #fff; font-size: 15px; }
+nav.toc { background: #fff; border-bottom: 1px solid var(--border); position: sticky; top: 0; z-index: 5; }
+nav.toc .wrap { display: flex; gap: 6px; overflow-x: auto; padding: 10px 20px; scrollbar-width: none; }
+nav.toc a { white-space: nowrap; text-decoration: none; color: var(--navy7); font-size: 14px; font-weight: 600; padding: 6px 12px; border-radius: 999px; border: 1px solid var(--border); }
+nav.toc a:hover { border-color: var(--orange); }
+main { padding: 28px 0 64px; }
+section.bab { background: #fff; border: 1px solid var(--border); border-radius: 12px; padding: 24px 24px 20px; margin-bottom: 20px; scroll-margin-top: 64px; }
+h2 { font-size: 22px; margin: 0 0 4px; display: flex; align-items: center; gap: 12px; }
+h2 .no { width: 34px; height: 34px; border-radius: 50%; background: var(--navy7); color: #fff; display: grid; place-items: center; font-size: 16px; flex: none; }
+.sub { color: var(--muted); margin: 0 0 16px; }
+h3 { font-size: 17px; margin: 22px 0 8px; }
+ol.langkah { counter-reset: n; list-style: none; padding: 0; margin: 0; display: flex; flex-direction: column; gap: 14px; }
+ol.langkah > li { counter-increment: n; position: relative; padding-left: 44px; }
+ol.langkah > li::before { content: counter(n); position: absolute; left: 0; top: 0; width: 30px; height: 30px; border-radius: 50%; background: var(--wash); color: #C2410C; font-weight: 700; display: grid; place-items: center; font-size: 14px; }
+.btnlabel { display: inline-block; padding: 0 8px; border-radius: 5px; background: #F1F5F9; border: 1px solid var(--border); font-weight: 600; font-size: 14px; white-space: nowrap; }
+.gbtn { background: var(--g); color: #fff; border-color: var(--g); }
+.obtn { background: var(--orange); color: #fff; border-color: var(--orange); }
+code, .mono { font-family: "JetBrains Mono", ui-monospace, Menlo, Consolas, monospace; font-size: .92em; background: #F1F5F9; padding: 1px 5px; border-radius: 4px; }
+.kotak { border-radius: 10px; padding: 14px 16px; margin: 14px 0; display: flex; gap: 12px; align-items: flex-start; }
+.kotak svg { width: 22px; height: 22px; flex: none; margin-top: 2px; fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+.kotak p { margin: 0; }
+.tips { background: var(--info); color: var(--navy7); }
+.awas { background: var(--wash); color: #7C2D12; }
+.aman { background: var(--passbg); color: #14532D; }
+.bahaya { background: var(--failbg); color: #7F1D1D; }
+table { width: 100%; border-collapse: collapse; font-size: 15px; margin: 8px 0; }
+th, td { border-bottom: 1px solid var(--border); text-align: left; padding: 10px 8px; vertical-align: top; }
+th { font-size: 13px; color: var(--muted); text-transform: uppercase; letter-spacing: .03em; }
+.harga { font-weight: 700; color: var(--navy); white-space: nowrap; }
+.dua { display: grid; grid-template-columns: minmax(0, 1fr) 300px; gap: 20px; align-items: start; }
+
+section.bab h2 { font-size: 20px; }
+section.bab ul { margin: 6px 0; padding-left: 20px; } section.bab li { margin: 4px 0; }
+.meta { color: #CBD5E1; font-size: 14px; margin-top: 10px; }
+footer { text-align: center; color: var(--muted); font-size: 13px; padding: 0 20px 40px; }
+@media (max-width: 640px) { h1 { font-size: 27px; } section.bab { padding: 18px 16px 14px; } th, td { padding: 8px 6px; font-size: 14px; } .tbl { overflow-x: auto; } .tbl table { min-width: 560px; } }
+@media print { nav.toc { display: none; } body { background: #fff; } section.bab { border: 0; padding: 8px 0; } header.hero { -webkit-print-color-adjust: exact; print-color-adjust: exact; } }
+</style>
+</head>
+<body>
+<header class="hero"><div class="wrap">
+  <div class="brand"><span class="logo"><svg viewBox="0 0 160 160" aria-hidden="true"><rect width="160" height="160" rx="36" fill="#FFFFFF"/><path d="M80 120 L34 46 H126 Z" fill="#F97316" fill-opacity="0.22"/><path d="M34 46 L80 120 L126 46" fill="none" stroke="#0F1B2D" stroke-width="22" stroke-linecap="round" stroke-linejoin="round"/><path d="M30 26 H130" fill="none" stroke="#F97316" stroke-width="15" stroke-linecap="round"/><circle cx="80" cy="120" r="20" fill="#FFFFFF"/><circle cx="80" cy="120" r="14" fill="#F97316"/></svg></span><span>Veri<em class="r">Rad</em></span></div>
+  <h1>Kebijakan <em>Privasi</em></h1>
+  <p>Bagaimana VeriRad memproses data Anda. Singkatnya: data QC tersimpan di Google Drive Anda sendiri dan tidak pernah dikirim ke kami.</p>
+  <p class="meta">Berlaku sejak 7 November 2026 · <a href="#en" style="color:#FF8A3D">English version</a></p>
+</div></header>
+
+<nav class="toc"><div class="wrap">
+  <a href="#ringkas">Ringkasan</a><a href="#kami">Pengendali data</a><a href="#data">Data yang diproses</a><a href="#google">Izin Google</a><a href="#atasan">Atasan</a>
+  <a href="#pihak">Pihak ketiga</a><a href="#simpan">Penyimpanan</a><a href="#hak">Hak Anda</a><a href="#kontak">Kontak</a><a href="#en">English</a>
+</div></nav>
+
+<main><div class="wrap">
+
+<section class="bab" id="ringkas">
+  <h2>Ringkasan</h2>
+  <div class="kotak aman"><svg viewBox="0 0 24 24"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+    <p><b>Data QC adalah milik Anda.</b> Hasil pengukuran, data rumah sakit dan alat, foto, tanda tangan, dan laporan PDF disimpan di <b>Google Drive akun Anda</b> (folder <b>VeriRad</b>) dan diolah di browser Anda. Server VeriRad tidak menerima dan tidak bisa membuka data tersebut.</p></div>
+  <ul>
+    <li>Server VeriRad hanya menyimpan data <b>akun &amp; langganan</b>: email, nama, nomor WhatsApp, paket, masa berlaku, catatan pembayaran, dan statistik pemakaian sederhana.</li>
+    <li>Ringkasan untuk atasan <b>dienkripsi di perangkat Anda</b> sebelum dikirim; kami hanya menyimpan sandi acak yang tidak bisa kami buka.</li>
+    <li>Tidak ada iklan, pelacak analitik, atau penjualan data.</li>
+  </ul>
+</section>
+
+<section class="bab" id="kami">
+  <h2>Siapa pengendali data</h2>
+  <p>VeriRad dikembangkan dan dijual oleh <b>JuniorLabs</b> (Yanuar A. S.), Indonesia — selanjutnya "kami". Untuk data akun &amp; langganan, kami adalah <b>pengendali data pribadi</b> menurut Undang-Undang No. 27 Tahun 2022 tentang Pelindungan Data Pribadi (UU PDP).</p>
+  <p>Untuk data QC di Google Drive Anda, <b>Anda</b> (fisikawan medis) adalah pengendalinya. VeriRad hanya alat yang Anda jalankan di browser Anda sendiri.</p>
+</section>
+
+<section class="bab" id="data">
+  <h2>Data yang diproses</h2>
+  <h3>1. Disimpan di server VeriRad (relay, Google Apps Script milik kami)</h3>
+  <div class="tbl"><table>
+    <tr><th>Data</th><th>Sumber</th><th>Tujuan</th></tr>
+    <tr><td>Alamat email Google</td><td>Login Google</td><td>Identitas akun, status langganan, email pemberitahuan</td></tr>
+    <tr><td>Nama &amp; nomor WhatsApp</td><td>Form pemesanan</td><td>Konfirmasi pembayaran dan bantuan</td></tr>
+    <tr><td>Paket, masa berlaku, pesanan, nominal &amp; tanggal pembayaran</td><td>Pemesanan &amp; konfirmasi admin</td><td>Menjalankan langganan, pembukuan &amp; pajak</td></tr>
+    <tr><td>Jumlah rumah sakit, versi aplikasi, waktu terakhir masuk</td><td>Aplikasi saat Anda masuk</td><td>Menegakkan batas paket (maks. 3 RS) dan dukungan teknis</td></tr>
+    <tr><td>Catatan aktivitas akun (waktu, jenis aksi)</td><td>Server</td><td>Keamanan dan penelusuran masalah</td></tr>
+    <tr><td>Ringkasan untuk atasan — <b>terenkripsi</b></td><td>Browser Anda</td><td>Diteruskan apa adanya ke atasan pemegang tautan</td></tr>
+  </table></div>
+  <h3>2. Disimpan di Google Drive Anda (bukan di server kami)</h3>
+  <p>Profil fisikawan medis (nama, nomor izin, kota, tanda tangan), data rumah sakit (nama, alamat, logo, penandatangan, email atasan), data alat dan fotonya, hasil QC dan lampiran, nama &amp; email atasan, serta arsip laporan PDF. VeriRad membaca dan menulis berkas ini langsung dari browser Anda.</p>
+  <div class="kotak awas"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M12 8v4M12 16h.01"/></svg>
+    <p>VeriRad dirancang untuk data alat, <b>bukan data pasien</b>. Jangan memasukkan identitas pasien ke catatan atau foto lampiran.</p></div>
+  <h3>3. Disimpan di perangkat Anda</h3>
+  <p>Salinan data QC (IndexedDB) agar aplikasi cepat dan bisa dipakai offline, sesi masuk dan status langganan terakhir (localStorage), serta token akses Google sementara (sessionStorage, ±1 jam). VeriRad tidak memakai cookie pelacak. Salinan ini terhapus bila Anda memilih <b>Keluar &amp; hapus salinan</b> atau menghapus data situs di browser.</p>
+  <h3>4. Yang tidak kami kumpulkan</h3>
+  <p>Kami tidak menyimpan kata sandi Google, isi Google Drive Anda, hasil QC, foto, laporan, maupun lokasi Anda.</p>
+</section>
+
+<section class="bab" id="google">
+  <h2>Izin Google yang diminta</h2>
+  <ul>
+    <li><b>Email &amp; profil dasar</b> (<span class="mono">openid</span>, <span class="mono">email</span>, <span class="mono">profile</span>) — untuk mengenali akun langganan Anda dan menampilkan nama Anda di aplikasi.</li>
+    <li><b>Berkas Google Drive tertentu yang Anda gunakan dengan aplikasi ini</b> (<span class="mono">drive.file</span>) — untuk membuat dan memperbarui folder VeriRad, database spreadsheet, berkas lampiran, dan laporan PDF. Izin ini <b>tidak</b> memberi akses ke berkas lain di Drive Anda.</li>
+  </ul>
+  <p>Token akses Google tetap berada di browser Anda. Server VeriRad hanya memeriksa keabsahannya ke Google saat Anda masuk untuk mengetahui alamat email Anda, lalu tidak menyimpannya.</p>
+  <p>Penggunaan dan pemindahan informasi yang diterima dari Google API oleh VeriRad mematuhi <a href="https://developers.google.com/terms/api-services-user-data-policy" target="_blank" rel="noopener">Google API Services User Data Policy</a>, termasuk persyaratan <i>Limited Use</i>. Data dari Google tidak dipakai untuk iklan, tidak dijual, dan tidak dipakai untuk melatih model AI.</p>
+  <p>Anda dapat mencabut izin kapan saja di <a href="https://myaccount.google.com/permissions" target="_blank" rel="noopener">Akun Google → Keamanan → Aplikasi pihak ketiga</a>. Data di Drive Anda tetap ada.</p>
+</section>
+
+<section class="bab" id="atasan">
+  <h2>Atasan dan berbagi laporan</h2>
+  <ul>
+    <li>Saat Anda menautkan atasan, aplikasi membuat ringkasan Dasbor &amp; Riwayat untuk RS yang Anda pilih, <b>mengenkripsinya (AES-256) di perangkat Anda</b>, lalu menyimpannya di server kami. Kuncinya hanya ada di tautan yang Anda kirim sehingga kami tidak dapat membacanya.</li>
+    <li>Di perangkat atasan, kunci tautan dibungkus PIN yang dibuat atasan dan tidak dikirim ke mana pun.</li>
+    <li>Ringkasan dihapus dari server saat atasan dinonaktifkan/dihapus atau tautannya diganti. Akses berhenti bila akun Anda dinonaktifkan.</li>
+    <li>Laporan PDF yang Anda kirim lewat Gmail, WhatsApp, atau aplikasi lain dibagikan <b>atas tindakan Anda sendiri</b> dari akun Anda. Bila Anda mengizinkan "siapa saja yang memegang tautan", setiap pemegang tautan dapat membuka PDF tersebut sampai Anda mencabutnya di Google Drive.</li>
+  </ul>
+</section>
+
+<section class="bab" id="pihak">
+  <h2>Pihak ketiga</h2>
+  <div class="tbl"><table>
+    <tr><th>Penyedia</th><th>Peran</th></tr>
+    <tr><td>Google (Apps Script, Drive, Sheets, Gmail, Google Sign-In, Google Fonts)</td><td>Infrastruktur server VeriRad, penyimpanan data Anda, login, pengiriman email pemberitahuan, dan huruf tampilan. Google dapat mencatat data teknis seperti alamat IP sesuai <a href="https://policies.google.com/privacy" target="_blank" rel="noopener">kebijakan privasinya</a>.</td></tr>
+    <tr><td>Vercel</td><td>Hosting halaman aplikasi; dapat mencatat log akses teknis (alamat IP, jenis browser) untuk operasional dan keamanan.</td></tr>
+    <tr><td>WhatsApp / aplikasi lain pilihan Anda</td><td>Hanya bila Anda sendiri mengirim bukti pembayaran, tautan atasan, atau laporan lewat aplikasi itu.</td></tr>
+  </table></div>
+  <p>Server Google dan Vercel dapat berada di luar Indonesia. Kami tidak menjual, menyewakan, atau membagikan data pribadi Anda kepada pihak lain untuk pemasaran.</p>
+</section>
+
+<section class="bab" id="simpan">
+  <h2>Penyimpanan, keamanan, dan insiden</h2>
+  <ul>
+    <li><b>Masa simpan:</b> data akun disimpan selama Anda berlangganan dan paling lama 12 bulan setelah langganan terakhir berakhir, kecuali Anda meminta penghapusan lebih cepat. Catatan pesanan dan pembayaran disimpan selama diwajibkan peraturan perpajakan.</li>
+    <li>Saat langganan berakhir, data QC di Drive Anda <b>tidak dihapus</b>; aplikasi menjadi baca saja.</li>
+    <li><b>Keamanan:</b> koneksi terenkripsi (HTTPS), sesi bertanda tangan HMAC berlaku 12 jam, rahasia server disimpan di Properti Skrip (bukan di kode), akses data akun hanya untuk admin, dan ringkasan atasan terenkripsi ujung ke ujung.</li>
+    <li><b>Insiden:</b> bila terjadi kegagalan pelindungan data pribadi yang kami kelola, kami memberi tahu Anda secara tertulis paling lambat 3 × 24 jam sesuai UU PDP.</li>
+    <li>VeriRad ditujukan untuk tenaga profesional dewasa dan tidak ditujukan bagi anak di bawah 18 tahun.</li>
+  </ul>
+</section>
+
+<section class="bab" id="hak">
+  <h2>Hak Anda</h2>
+  <p>Sesuai UU PDP, Anda berhak meminta informasi dan salinan data pribadi Anda, memperbaiki data yang keliru, menghapus data, menarik persetujuan, dan mengajukan keberatan atas pemrosesan. Kirim permintaan ke kontak di bawah dari email akun Anda; kami tanggapi dalam 3 hari kerja.</p>
+  <ul>
+    <li>Data QC Anda dapat Anda lihat, ekspor (CSV/PDF), atau hapus sendiri kapan saja di Google Drive Anda.</li>
+    <li>Menghapus akun langganan tidak menghapus folder VeriRad di Drive Anda; hapus sendiri bila tidak diperlukan lagi.</li>
+  </ul>
+</section>
+
+<section class="bab" id="ubah">
+  <h2>Perubahan kebijakan</h2>
+  <p>Kebijakan ini dapat diperbarui mengikuti perubahan fitur atau peraturan. Tanggal berlaku di bagian atas akan diubah, dan perubahan penting kami umumkan lewat email atau di dalam aplikasi.</p>
+</section>
+
+<section class="bab" id="kontak">
+  <h2>Kontak</h2>
+  <p><b>JuniorLabs — VeriRad</b><br>Email: <a href="mailto:juniorlabs.id@gmail.com">juniorlabs.id@gmail.com</a><br>WhatsApp: <a href="https://wa.me/628561254689" target="_blank" rel="noopener">0856-1254-689</a></p>
+</section>
+
+<section class="bab" id="en" lang="en">
+  <h2>Privacy Policy — English version</h2>
+  <p class="sub">Effective 7 November 2026. If the two versions differ, the Indonesian version prevails.</p>
+  <p><b>Summary.</b> VeriRad is developed and sold by JuniorLabs (Yanuar A. S.), Indonesia. Your QC data — measurements, hospital and equipment data, photos, signature and PDF reports — is stored in <b>your own Google Drive</b> (the "VeriRad" folder) and processed in your browser. Our server never receives it and cannot open it. No ads, no analytics trackers, no data selling.</p>
+  <p><b>What our server (relay) stores:</b> your Google email address; name and WhatsApp number from the order form; plan, validity, orders, payment amounts and dates; number of hospitals, app version and last sign-in time (to enforce the 3-hospital plan limit and for support); an account activity log; and supervisor summaries that are <b>encrypted on your device</b> (AES-256) — the key lives only in the link you send, so we cannot read them.</p>
+  <p><b>On your device:</b> a copy of your QC data (IndexedDB) for speed and offline use, your session and last subscription status (localStorage), and a temporary Google access token (sessionStorage, about 1 hour). No tracking cookies.</p>
+  <p><b>Google permissions:</b> basic email and profile (<span class="mono">openid email profile</span>) to identify your subscription account, and <span class="mono">drive.file</span> to create and update only the files VeriRad itself creates — not any other file in your Drive. The access token stays in your browser; our server only checks it with Google at sign-in to learn your email and does not store it. VeriRad's use and transfer of information received from Google APIs adheres to the <a href="https://developers.google.com/terms/api-services-user-data-policy" target="_blank" rel="noopener">Google API Services User Data Policy</a>, including the Limited Use requirements. Google user data is not used for advertising, is not sold, and is not used to train AI models. You can revoke access at any time in your <a href="https://myaccount.google.com/permissions" target="_blank" rel="noopener">Google Account permissions</a>.</p>
+  <p><b>Sharing:</b> reports you send via Gmail, WhatsApp or other apps are shared by your own action from your own account. Service providers: Google (Apps Script, Drive, Sheets, Gmail, Sign-In, Fonts) and Vercel (hosting); they may log technical data such as IP addresses and may operate outside Indonesia.</p>
+  <p><b>Retention &amp; security:</b> account data is kept while you subscribe and for up to 12 months after your last subscription ends, unless you ask for earlier deletion; order and payment records are kept as long as tax rules require. Your QC data in Drive is never deleted by us. HTTPS, HMAC-signed 12-hour sessions, secrets kept in Script Properties, admin-only access. We notify you in writing within 3 × 24 hours of a personal-data protection failure, as required by Indonesian Law No. 27 of 2022 (PDP Law). VeriRad is meant for adult professionals, not for children under 18. Do not enter patient identities.</p>
+  <p><b>Your rights:</b> under the PDP Law you may request access to, a copy of, correction or deletion of your personal data, withdraw consent, or object to processing. Email <a href="mailto:juniorlabs.id@gmail.com">juniorlabs.id@gmail.com</a> from your account email; we reply within 3 working days.</p>
+</section>
+
+</div></main>
+<footer>VeriRad — Smart QC for Safer Radiology · <a href="./">Buka aplikasi</a> · <a href="panduan.html">Panduan</a></footer>
+</body>
+</html>

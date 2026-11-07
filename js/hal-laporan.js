@@ -26,7 +26,7 @@ daftarHalaman('laporan', {
     const final = alat.filter(a => { const s = sesiAlat(a.alat_id, LP.periode); return s && s.status_sesi === 'FINAL'; });
     const gagal = final.filter(a => sesiAlat(a.alat_id, LP.periode).status_total === 'GAGAL');
     const profilKurang = !AppState.pengaturan.nama_fismed || !AppState.pengaturan.ttd_file_id || !(rs.no_izin_fismed || AppState.pengaturan.no_izin);
-    el.innerHTML = '<div class="page-h"><div><h1>Laporan Quality Control Bulanan</h1><p>Pratinjau di bawah sama persis dengan PDF yang dibuat server.</p></div>' +
+    el.innerHTML = '<div class="page-h"><div><h1>Laporan Quality Control Bulanan</h1><p>' + (relayAktif() ? 'Pratinjau di bawah sama persis dengan PDF yang dibuat.' : 'Pratinjau di bawah sama persis dengan PDF yang dibuat server.') + '</p></div>' +
       '<div class="act"><button class="btn" id="lp-csv">' + ic('download') + 'Ekspor CSV</button><button class="btn" id="lp-cetak">' + ic('printer') + 'Cetak</button></div></div>' +
       (profilKurang ? '<div class="banner banner-warn">' + ic('triangle-alert') + '<div class="t small">Nama, tanda tangan, atau nomor izin (SIP) untuk RS ini belum lengkap, sehingga blok tanda tangan di PDF belum lengkap.</div><a class="btn btn-sm" href="#/pengaturan">Lengkapi</a></div>' : '') +
       '<div class="row r-1-2"><div class="stack">' +
@@ -45,8 +45,9 @@ daftarHalaman('laporan', {
       '<div class="field"><span class="lbl">Tembusan (CC)</span><div class="emails" id="lp-cc"></div></div>' +
       '<div class="field"><label for="lp-subjek">Subjek</label><input class="input" id="lp-subjek" value="' + esc(LP.subjek || subjekBawaan) + '"></div>' +
       '<div class="field"><label for="lp-pesan">Pesan pengantar</label><textarea class="input" id="lp-pesan" rows="7">' + esc(LP.pesan || pesanBawaan) + '</textarea></div>' +
-      '<p class="hint" style="margin:0">Dikirim dari akun Gmail Anda dengan PDF terlampir. Kuota Gmail biasa ±100 penerima/hari.</p>' +
-      '</div><div class="card-f"><button class="btn" id="lp-unduh">' + ic('file-down') + 'Unduh PDF</button><button class="btn btn-primary" id="lp-kirim">' + ic('send') + 'Kirim ke atasan</button></div></div>' +
+      (relayAktif() ? '<p class="hint" style="margin:0">PDF dibuat di perangkat ini dan disimpan di Google Drive Anda. Lalu pilih kirim lewat Gmail, WhatsApp, atau aplikasi lain.</p>' :
+        '<p class="hint" style="margin:0">Dikirim dari akun Gmail Anda dengan PDF terlampir. Kuota Gmail biasa ±100 penerima/hari.</p>') +
+      '</div><div class="card-f"><button class="btn" id="lp-unduh">' + ic('file-down') + 'Unduh PDF</button><button class="btn btn-primary" id="lp-kirim">' + ic('send') + (relayAktif() ? 'Buat & kirim' : 'Kirim ke atasan') + '</button></div></div>' +
       '</div><div class="card"><div class="card-h"><h2>' + ic('eye') + 'Pratinjau dokumen</h2><span class="small muted mono">A4 potret</span></div><div class="preview-wrap" id="lp-prev"><div class="skel" style="width:100%;max-width:820px;height:900px"></div></div></div></div>' +
       '<div class="card" id="lp-riwayat"></div>';
     emailChips($('#lp-ke', el), LP.penerima, v => { LP.penerima = v; });
@@ -160,6 +161,7 @@ async function buatGrafikLaporan(rs, per, sesiPer, lang) {
 
 async function buatLaporan(el, kirim, btn) {
   const rs = getRs(LP.rs);
+  if (relayAktif()) return buatLaporanDrive(el, kirim, btn, rs);
   if (kirim) {
     const ke = (LP.penerima || []).filter(Boolean);
     if (!ke.length) return toast('Isi minimal satu email penerima.', 'warning');
@@ -187,7 +189,8 @@ function gambarRiwayatLaporan(box, bolehKirim) {
     (rows.length ? '<div class="tbl-wrap"><table class="tbl"><thead><tr><th>Periode</th><th>Rumah sakit</th><th>Dikirim ke</th><th>Waktu</th><th class="c">Status</th><th></th></tr></thead><tbody>' +
       rows.map(l => {
         const rs = getRs(l.rs_id) || {};
-        const st = l.status_kirim === 'GAGAL' ? '<span class="badge b-gagal" title="' + esc(l.pesan_error) + '">Gagal kirim</span>' : badge(l.status_kirim === 'TERKIRIM' ? 'TERKIRIM' : 'DIBUAT', l.status_kirim === 'TERKIRIM' ? 'Terkirim' : 'PDF dibuat');
+        const st = l.status_kirim === 'GAGAL' ? '<span class="badge b-gagal" title="' + esc(l.pesan_error) + '">Gagal kirim</span>' :
+          l.status_kirim === 'DIBAGIKAN' ? '<span class="badge b-lulus" title="' + esc(l.pesan_error) + '">Dibagikan</span>' : badge(l.status_kirim === 'TERKIRIM' ? 'TERKIRIM' : 'DIBUAT', l.status_kirim === 'TERKIRIM' ? 'Terkirim' : 'PDF dibuat');
         return '<tr><td><b>' + esc(vrNamaPeriode(l.periode)) + '</b><span class="sub mono">' + esc(l.nama_file) + '</span></td><td>' + esc(rs.nama || l.rs_id) + '</td><td class="small">' + esc(l.dikirim_ke || '—') + (l.cc ? '<span class="sub">CC: ' + esc(l.cc) + '</span>' : '') + '</td>' +
           '<td class="m">' + jamTgl(l.waktu) + '</td><td class="c">' + st + '</td><td><div class="hstack" style="justify-content:flex-end;flex-wrap:nowrap">' +
           '<button class="btn btn-sm" data-unduh="' + l.laporan_id + '">' + ic('download') + 'PDF</button>' +
@@ -197,12 +200,13 @@ function gambarRiwayatLaporan(box, bolehKirim) {
     setBusy(b, true, '');
     const r = await api('laporan.unduh', { laporan_id: b.dataset.unduh });
     setBusy(b, false);
-    if (!r.success) return toast(r.message, 'error');
+    if (!r.success) { if (r.data && r.data.url) window.open(r.data.url, '_blank', 'noopener'); return toast(r.message, 'error'); }
     if (r.data.base64) unduhBase64(r.data.nama_file, r.data.base64, 'application/pdf');
     else toast('Mode demo: PDF tidak tersedia. Gunakan tombol Cetak di halaman laporan.', 'info');
   }));
   $$('[data-ulang]', box).forEach(b => b.addEventListener('click', async () => {
     const l = AppState.laporan.find(x => x.laporan_id === b.dataset.ulang);
+    if (relayAktif()) return modalBagikanLaporan(l, null, () => gambarRiwayatLaporan(box, bolehKirim));
     const rs = getRs(l.rs_id) || {};
     const def = l.dikirim_ke || rs.email_atasan || '';
     const m = modal({ judul: 'Kirim ulang laporan', ikon: 'send', isi: '<p class="small muted" style="margin-top:0">' + esc(l.nama_file) + '</p><div class="field"><label for="ku-ke">Kepada (pisahkan dengan koma)</label><input class="input" id="ku-ke" value="' + esc(def) + '"></div>' +
@@ -235,4 +239,128 @@ async function eksporCsvPeriode(rs, per) {
       vrTeksToleransi(h, h.min_terpakai === '' ? null : vrAngka(h.min_terpakai), h.maks_terpakai === '' ? null : vrAngka(h.maks_terpakai), sep()), LABEL_STATUS[h.status] || h.status, h.alasan_na]));
   });
   unduhCsv('QC_' + (rs.kode || 'RS') + '_' + per + '.csv', baris);
+}
+
+/* =====================================================================
+ * MODE DRIVE (v3): PDF dibuat di browser (sama persis dengan pratinjau),
+ * disimpan ke Google Drive fisikawan medis, lalu dibagikan lewat
+ * Gmail / WhatsApp / menu Bagikan perangkat.
+ * ===================================================================== */
+function relayAktif() { return !!(window.modeRelay && modeRelay() && !AppState.demo && !AppState.atasanPaket); }
+/** HTML laporan → Blob PDF A4 (html2pdf dimuat di iframe tersembunyi agar gaya aplikasi tidak ikut). */
+async function pdfDariHtml(html) {
+  const ifr = document.createElement('iframe');
+  ifr.setAttribute('aria-hidden', 'true'); ifr.setAttribute('data-no-i18n', '');
+  ifr.style.cssText = 'position:fixed;left:-20000px;top:0;width:720px;height:1000px;border:0;visibility:hidden';
+  document.body.appendChild(ifr);
+  try {
+    await new Promise((res, rej) => { ifr.onload = res; ifr.onerror = rej; ifr.srcdoc = html.replace('</body>', '<script src="js/vendor/html2pdf.bundle.min.js"><\/script></body>'); });
+    await new Promise((res, rej) => { const t0 = Date.now(), t = setInterval(() => { if (ifr.contentWindow.html2pdf) { clearInterval(t); res(); } else if (Date.now() - t0 > 20000) { clearInterval(t); rej(new Error('Pembuat PDF gagal dimuat.')); } }, 50); });
+    const w = ifr.contentWindow;
+    await new Promise(r => setTimeout(r, 60));
+    const b = await w.html2pdf().set({ margin: 14, image: { type: 'jpeg', quality: 0.92 }, html2canvas: { scale: 2, backgroundColor: '#ffffff', logging: false, useCORS: true },
+      jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait', compress: true }, pagebreak: { mode: ['css', 'legacy'], avoid: ['tr', 'img', 'h2', 'h3'] } }).from(w.document.body).outputPdf('blob');
+    return new Blob([await b.arrayBuffer()], { type: 'application/pdf' });   // salin ke dunia halaman induk sebelum iframe dibuang
+  } finally { ifr.remove(); }
+}
+async function buatLaporanDrive(el, kirim, btn, rs) {
+  setBusy(btn, true, 'Membuat PDF…');
+  try {
+    const d = await dataLaporan(rs, LP.periode, LP.grafik, LP.bahasa);
+    if (!d) return;
+    const pdf = await pdfDariHtml(vrLaporanHtml(d));
+    btn.innerHTML = ic('loader-circle', 'spin') + esc('Menyimpan ke Drive…');
+    const nama = ('Laporan_QC_' + (rs.kode || rs.nama) + '_' + LP.periode).replace(/[^A-Za-z0-9_\-]+/g, '_') + (LP.bahasa === 'en' ? '_EN' : '') + '.pdf';
+    const r = await api('laporan.buat', { rs_id: rs.rs_id, periode: LP.periode, bahasa: LP.bahasa, pdf, nama_file: nama });
+    if (!r.success) {
+      toast(r.message + (r.network ? ' PDF tetap diunduh ke perangkat ini.' : ''), 'error');
+      if (r.network) unduhBlob(nama, pdf);
+      return;
+    }
+    AppState.laporan.unshift(r.data.laporan); gambarRiwayatLaporan($('#lp-riwayat', el), true);
+    if (!kirim) { unduhBlob(r.data.nama_file, pdf); toast('PDF dibuat dan disimpan di Google Drive Anda (folder VeriRad → Laporan PDF).', 'success'); return; }
+    modalBagikanLaporan(r.data.laporan, pdf, () => gambarRiwayatLaporan($('#lp-riwayat', el), true), { penerima: LP.penerima, cc: LP.cc, subjek: $('#lp-subjek', el).value, pesan: $('#lp-pesan', el).value });
+  } catch (e) { console.error(e); toast('PDF gagal dibuat: ' + e.message, 'error'); }
+  finally { setBusy(btn, false); }
+}
+function modalBagikanLaporan(l, pdf, sesudah, isi) {
+  const rs = getRs(l.rs_id) || {}, en = /_EN\.pdf$/.test(l.nama_file);
+  isi = isi || {};
+  const ke = (isi.penerima && isi.penerima.length ? isi.penerima : vrDaftarEmail(l.dikirim_ke && l.dikirim_ke.indexOf('@') > -1 ? l.dikirim_ke : rs.email_atasan)).filter(emailOk);
+  const cc = (isi.cc && isi.cc.length ? isi.cc : vrDaftarEmail(l.cc || rs.email_cc)).filter(emailOk);
+  const subjek = isi.subjek || ((en ? '[VeriRad] Radiology QC Report ' : '[VeriRad] Laporan QC Radiologi ') + (rs.nama || '') + ' — ' + vrNamaPeriode(l.periode, en ? 'en' : 'id'));
+  const pesan = isi.pesan || (en ? 'Please find the monthly QC report attached.' : 'Bersama ini kami sampaikan laporan QC bulanan alat radiologi ' + (rs.nama || '') + ' periode ' + vrNamaPeriode(l.periode) + '.');
+  const bisaBagikan = !!(navigator.canShare && window.File && navigator.canShare({ files: [new File([new Blob(['x'], { type: 'application/pdf' })], 'a.pdf', { type: 'application/pdf' })] }));
+  const m = modal({
+    judul: 'Kirim laporan', ikon: 'send', lebar: true,
+    isi: '<div class="stack"><div class="hstack between"><div><b>' + esc(rs.nama || '') + '</b> · ' + esc(vrNamaPeriode(l.periode)) + '<div class="small muted mono">' + esc(l.nama_file) + '</div></div>' +
+      '<button class="btn btn-sm" id="bg-unduh">' + ic('download') + 'Unduh PDF</button></div>' +
+      '<div class="field"><label for="bg-ke">Kepada</label><input class="input" id="bg-ke" value="' + esc(ke.join(', ')) + '" placeholder="email atasan (pisahkan dengan koma)"></div>' +
+      '<div class="field"><label for="bg-cc">CC</label><input class="input" id="bg-cc" value="' + esc(cc.join(', ')) + '"></div>' +
+      '<div class="kirim-pilih">' +
+      (bisaBagikan ? '<button class="btn btn-primary kirim-op" id="bg-share">' + ic('share-2') + '<span><b>Bagikan PDF…</b><small>Lampirkan PDF ke Gmail, WhatsApp, atau aplikasi lain di perangkat ini</small></span></button>' : '') +
+      '<button class="btn ' + (bisaBagikan ? '' : 'btn-primary ') + 'kirim-op" id="bg-gmail">' + ic('mail') + '<span><b>Buka di Gmail</b><small>Email berisi tautan PDF; penerima diberi akses lihat di Google Drive</small></span></button>' +
+      '<button class="btn kirim-op" id="bg-wa">' + ic('message-circle') + '<span><b>Kirim via WhatsApp</b><small>Pesan berisi tautan PDF di Google Drive</small></span></button></div>' +
+      '<label class="check"><input type="checkbox" id="bg-publik"><span>Siapa saja yang memegang tautan boleh membuka PDF ini<span class="hint" style="display:block">Perlu untuk WhatsApp atau bila penerima tidak memakai akun Google dengan email di atas. Bisa dicabut kapan saja dari Google Drive.</span></span></label>' +
+      '<div id="bg-msg"></div></div>',
+    tombol: [{ label: 'Tutup' }]
+  });
+  const msg = t => { $('#bg-msg', m).innerHTML = t; };
+  async function ambilPdf() {
+    if (pdf) return pdf;
+    const r = await api('laporan.unduh', { laporan_id: l.laporan_id });
+    if (!r.success) throw new Error(r.message);
+    const bin = atob(r.data.base64), a = new Uint8Array(bin.length); for (let i = 0; i < bin.length; i++) a[i] = bin.charCodeAt(i);
+    return (pdf = new Blob([a], { type: 'application/pdf' }));
+  }
+  async function tandai(via, penerima, ccs) {
+    const r = await api('laporan.tandai', { laporan_id: l.laporan_id, via, penerima, cc: ccs });
+    if (r.success) { Object.assign(l, r.data); const i = AppState.laporan.findIndex(x => x.laporan_id === l.laporan_id); if (i > -1) AppState.laporan[i] = l; if (sesudah) sesudah(); }
+  }
+  const daftar = id => vrDaftarEmail($(id, m).value).filter(emailOk);
+  async function tautkan(btn, perluPublik) {
+    const publik = $('#bg-publik', m).checked || perluPublik;
+    const em = daftar('#bg-ke').concat(daftar('#bg-cc'));
+    setBusy(btn, true, 'Menyiapkan tautan…');
+    try {
+      const b = await DB.bagikan(l.pdf_file_id, publik ? [] : em, publik);
+      if (b.gagal.length) toast('Akses Drive tidak bisa diberikan ke: ' + b.gagal.join(', ') + '. Centang "Siapa saja yang memegang tautan" bila perlu.', 'warning');
+      return b.url;
+    } catch (e) { toast('Tautan Drive gagal dibuat: ' + e.message, 'error'); return ''; }
+    finally { setBusy(btn, false); }
+  }
+  $('#bg-unduh', m).addEventListener('click', async e => { setBusy(e.currentTarget, true, ''); try { unduhBlob(l.nama_file, await ambilPdf()); } catch (er) { toast(er.message, 'error'); } setBusy(e.currentTarget, false); });
+  const sh = $('#bg-share', m);
+  if (sh) sh.addEventListener('click', async e => {
+    try {
+      setBusy(e.currentTarget, true, 'Menyiapkan…');
+      const f = new File([await ambilPdf()], l.nama_file, { type: 'application/pdf' });
+      setBusy(e.currentTarget, false);
+      await navigator.share({ files: [f], title: subjek, text: pesan });
+      await tandai('bagikan', daftar('#bg-ke'), daftar('#bg-cc'));
+      msg('<div class="banner banner-info small">' + ic('circle-check') + '<div class="t">Laporan dibagikan.</div></div>');
+    } catch (er) { setBusy(e.currentTarget, false); if (er && er.name !== 'AbortError') toast(er.message, 'error'); }
+  });
+  $('#bg-gmail', m).addEventListener('click', async e => {
+    const to = daftar('#bg-ke');
+    if (!to.length) return toast('Isi minimal satu email penerima.', 'warning');
+    const w = window.open('about:blank', '_blank');                       // buka dulu agar tidak diblokir popup
+    const url = await tautkan(e.currentTarget, false);
+    if (!url) { if (w) w.close(); return; }
+    const body = pesan + '\n\n' + (en ? 'PDF report: ' : 'Laporan PDF: ') + url + '\n';
+    const g = 'https://mail.google.com/mail/?view=cm&fs=1&to=' + encodeURIComponent(to.join(',')) + '&cc=' + encodeURIComponent(daftar('#bg-cc').join(',')) + '&su=' + encodeURIComponent(subjek) + '&body=' + encodeURIComponent(body);
+    if (w) w.location.href = g; else window.open(g, '_blank', 'noopener');
+    await tandai('gmail', to, daftar('#bg-cc'));
+    msg('<div class="banner banner-info small">' + ic('info') + '<div class="t">Gmail terbuka di tab baru — periksa isinya lalu klik <b>Kirim</b>.</div></div>');
+  });
+  $('#bg-wa', m).addEventListener('click', async e => {
+    if (!$('#bg-publik', m).checked && !(await konfirmasi('Izinkan pemegang tautan membuka PDF?', 'Penerima WhatsApp membuka PDF lewat tautan Google Drive. Agar bisa dibuka tanpa login, PDF ini diatur "siapa saja yang memegang tautan dapat melihat".', 'Izinkan & lanjut'))) return;
+    $('#bg-publik', m).checked = true;
+    const w = window.open('about:blank', '_blank');
+    const url = await tautkan(e.currentTarget, true);
+    if (!url) { if (w) w.close(); return; }
+    const wa = 'https://wa.me/?text=' + encodeURIComponent(subjek + '\n\n' + pesan + '\n\n' + url);
+    if (w) w.location.href = wa; else window.open(wa, '_blank', 'noopener');
+    await tandai('wa', [], []);
+  });
 }
