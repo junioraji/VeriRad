@@ -472,13 +472,15 @@ async function muatSesiSejak(dari) {
   return true;
 }
 
-/* ---------- Logo VeriRad: huruf V = berkas sinar-X dari titik fokus (oranye) ke garis detektor ----------
- * varian 'terang' (kotak putih, V biru tua) untuk latar gelap; 'gelap' (kotak biru tua, V putih) untuk latar terang. */
+/* ---------- Logo VeriRad: huruf V = berkas sinar-X dari titik fokus ke garis detektor ----------
+ * varian bawaan (latar gelap): kotak oranye, V biru tua, garis & titik putih.
+ * 'gelap' (latar terang): kotak biru tua, V putih, garis & titik oranye. */
 function logoVR(varian) {
-  const g = varian === 'gelap', bg = g ? '#0F1B2D' : '#FFFFFF', v = g ? '#FFFFFF' : '#0F1B2D';
+  const g = varian === 'gelap';
+  const bg = g ? '#0F1B2D' : '#F97316', v = g ? '#FFFFFF' : '#0F1B2D', aksen = g ? '#F97316' : '#FFFFFF', op = g ? '0.22' : '0.32';
   return '<svg viewBox="0 0 160 160" aria-hidden="true" focusable="false"><rect width="160" height="160" rx="36" fill="' + bg + '"/>' +
-    '<path d="M80 120 L34 46 H126 Z" fill="#F97316" fill-opacity="0.22"/>' +
+    '<path d="M80 120 L34 46 H126 Z" fill="' + aksen + '" fill-opacity="' + op + '"/>' +
     '<path d="M34 46 L80 120 L126 46" fill="none" stroke="' + v + '" stroke-width="22" stroke-linecap="round" stroke-linejoin="round"/>' +
-    '<path d="M30 26 H130" fill="none" stroke="#F97316" stroke-width="15" stroke-linecap="round"/>' +
-    '<circle cx="80" cy="120" r="20" fill="' + bg + '"/><circle cx="80" cy="120" r="14" fill="#F97316"/></svg>';
+    '<path d="M30 26 H130" fill="none" stroke="' + aksen + '" stroke-width="15" stroke-linecap="round"/>' +
+    '<circle cx="80" cy="120" r="20" fill="' + bg + '"/><circle cx="80" cy="120" r="14" fill="' + aksen + '"/></svg>';
 }

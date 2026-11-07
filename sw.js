@@ -6,7 +6,7 @@
  * - Panggilan API Google Apps Script & login Google TIDAK pernah disimpan.
  * Naikkan VERSI bila daftar berkas berubah.
  * ===================================================================== */
-const VERSI = 'verirad-v3.0.2';
+const VERSI = 'verirad-v3.0.3';
 const CACHE_APP = VERSI + '-app', CACHE_FONT = 'verirad-font';
 const ASET = [
   './', 'index.html', 'manifest.webmanifest', 'css/style.css',
